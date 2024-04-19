@@ -6,7 +6,7 @@
         span.text-regular-14 State:
         span.text-bold-14.state {{document.state}}
     p.information(v-for="element in informationMerge")
-      p.text-bold-14.text-white.name {{element.name}}
+      p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-bold-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white {{element.information_involved}}
     .bottom(v-if="document.state != 'MANAGED'")
@@ -53,6 +53,10 @@ async function setManaged() {
       break
   }
 }
+
+function goTo(element: any) {
+  window.open(element.url, '_blank')
+}
 </script>
 
 <style scoped lang="scss">
@@ -84,6 +88,14 @@ async function setManaged() {
 
   .name, .involved-information {
     margin-bottom: 5px;
+  }
+
+  .name {
+    cursor: pointer;
+
+    &:hover {
+      color: var(--primary-color)
+    }
   }
 
   .bottom {

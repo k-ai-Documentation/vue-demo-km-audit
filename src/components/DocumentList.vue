@@ -3,12 +3,9 @@
     table.files
       thead
         tr
-          th.text-medium-14.text-grey Index
           th.text-medium-14.text-grey Name
       tbody
-        tr(v-for="(file, index) in documentList" :key="file.name")
-          td.index(width=30)
-            p.text-white.text-regular-14 {{ index + 1 }}
+        tr(v-for="(file, index) in documentList" :key="file.name" @click="goTo(file)")
           td.name-td(width=576)
             p.text-white.text-regular-14 {{ file.name }}
 </template>
@@ -17,6 +14,9 @@
 const pros = defineProps(['documentList'])
 const documentList = pros.documentList
 
+function goTo(file: any) {
+  window.open(file.url, '_blank')
+}
 </script>
 
 <style scoped lang="scss">
@@ -40,6 +40,15 @@ const documentList = pros.documentList
         height: 50px;
         line-height: 50px;
         vertical-align: middle
+      }
+    }
+  }
+
+  .name-td {
+    cursor: pointer;
+    &:hover {
+      p {
+        color: var(--primary-color)
       }
     }
   }
