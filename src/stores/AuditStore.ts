@@ -13,7 +13,7 @@ export const useAuditStore = defineStore('auditStore', () => {
     let conflictInformationList: Ref<any[]> = ref([]);
     let duplicatedInformationList: Ref<any[]> = ref([]);
     let documentsToManageList: Ref<any[]> = ref([]);
-    let allDocumentList: Ref<any[]> = ref([]);
+    let missingSubjects: Ref<any[]> = ref([]);
 
     if (organizationId && instanceId && apiKey) {
         sdk = new KaiStudio({
@@ -109,10 +109,30 @@ export const useAuditStore = defineStore('auditStore', () => {
     }
 
 
-    async function getAllDocuments() {
+    async function getMissingSubjectList(limit: number, initialOffset: number) {
         if (!sdk) {
             return
         }
+
+        if (initialOffset == 0) {
+            missingSubjects.value = []
+        }
+
+        let offset = initialOffset
+        let result = await kmAudit.getMissingSubjectList(20, offset)
+        if (result) {
+            for (let index = 0; index < result.length; index++) {
+                let subject = result[index]
+                if (subject) {
+                    missingSubjects.value.push(subject)
+                }
+            }
+        }
+        if (result && result.length == limit) {
+            offset = offset + limit
+            await getMissingSubjectList(limit, offset)
+        }
+
 
     }
 
@@ -139,11 +159,11 @@ export const useAuditStore = defineStore('auditStore', () => {
         getConflictInformation,
         getDuplicatedInformation,
         getDocumentsToManageList,
-        getAllDocuments,
+        getMissingSubjectList,
         conflictInformationList,
         duplicatedInformationList,
         documentsToManageList,
-        allDocumentList,
+        missingSubjects,
         setDuplicateManaged,
         setConflictManaged
     }

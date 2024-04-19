@@ -5,6 +5,7 @@
       p.text-regular-16(:class="{ active: menu == 'toManage' }" @click="menu = 'toManage'") Documents to manage
       p.text-regular-16(:class="{ active: menu == 'conflict' }"  @click="menu = 'conflict'") Conflict information
       p.text-regular-16(:class="{ active: menu == 'duplicate' }" @click="menu = 'duplicate'") Duplicate information
+      p.text-regular-16(:class="{ active: menu == 'subject' }" @click="menu = 'subject'") Missing subjects
     .documents-to-manage(v-if="menu == 'toManage'")
       .text-white.text-bold-20.sub-title Documents to manage
       document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length")
@@ -14,26 +15,40 @@
     .duplicate-documents(v-if="menu == 'duplicate'")
       .text-white.text-bold-20.sub-title Duplicate information
       document-card.document-card(v-for="(element, index) in duplicatedInformationList" :document="element" :key="index" type="duplicate")
-    .all-documents(v-if="menu == 'all'")
+    .missing-subjects(v-if="menu == 'subject'")
+      .text-white.text-bold-20.sub-title Missing subjects
+      missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, type Ref} from "vue";
+import {onMounted, ref, type Ref, watch} from "vue";
 import DocumentCard from "@/components/DocumentCard.vue";
 import {useAuditStore} from "@/stores/AuditStore";
 import {storeToRefs} from "pinia";
 import DocumentList from "@/components/DocumentList.vue";
+import MissingSubjectCard from "@/components/MissingSubjectCard.vue";
 
 const menu: Ref<string> = ref('toManage')
 const auditStore = useAuditStore()
 
-const {conflictInformationList, duplicatedInformationList, documentsToManageList} = storeToRefs(auditStore)
+const {conflictInformationList, duplicatedInformationList, documentsToManageList, missingSubjects} = storeToRefs(auditStore)
 
-onMounted(async () => {
-  await auditStore.getDocumentsToManageList(20, 0)
-  await auditStore.getConflictInformation(20, 0)
-  await auditStore.getDuplicatedInformation(20, 0)
-})
+watch(menu, async () => {
+  switch (menu.value) {
+    case "toManage":
+      await auditStore.getDocumentsToManageList(20, 0)
+      break
+    case "conflict":
+      await auditStore.getConflictInformation(20, 0)
+      break
+    case "duplicate":
+      await auditStore.getDuplicatedInformation(20, 0)
+      break
+    case "subject":
+      await auditStore.getMissingSubjectList(20, 0)
+      break
+  }
+}, {deep: true, immediate: true})
 
 </script>
 

@@ -1,0 +1,42 @@
+<template lang="pug">
+  .missing-subject
+    .top
+      p.text-white.text-bold-14 Subject: {{subject.subject}}
+    p.information
+      p.text-bold-14.text-grey.involved-information Needed information:
+      p.text-regular-14.text-white {{subject.information_needed}}
+
+</template>
+
+<script setup lang="ts">
+import {useAuditStore} from "@/stores/AuditStore";
+
+const pros = defineProps(['subject'])
+const subject = pros.subject
+const auditStore = useAuditStore()
+</script>
+
+<style scoped lang="scss">
+.missing-subject {
+  border-radius: 10px;
+  border: 2px solid var(--color-border);
+  margin-bottom: 20px;
+  width: 800px;
+  padding: 20px;
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+
+  .information {
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+</style>
