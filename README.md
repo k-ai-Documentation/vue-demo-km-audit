@@ -1,19 +1,3 @@
-# vue-demo-km-audit
-
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
 ## Project Setup
 
 ```sh
@@ -26,6 +10,19 @@ npm install
 npm run dev
 ```
 
+### Set environment variables
+
+#### Type 1
+```sh
+VITE_APP_ORGANIZATION_ID = 'your organization id'
+VITE_APP_INSTANCE_ID = 'your instance id'
+VITE_APP_API_KEY = "api key"
+```
+#### Type 2: when you deploy api server on your own server
+```sh
+VITE_APP_API_KEY = "api key" //optional
+VITE_HOST_URL="api-host" //example: "http://localhost:8080/"
+```
 ### Type-Check, Compile and Minify for Production
 
 ```sh
