@@ -17,12 +17,34 @@
 
 <script setup lang="ts">
 import {computed, type ComputedRef} from "vue";
-import {useAuditStore} from "@/stores/AuditStore";
+import {KaiStudio} from "sdk-js";
 
-const pros = defineProps(['document', 'type'])
-const document = pros.document
-const type = pros.type
-const auditStore = useAuditStore()
+const props = defineProps(['document', 'type', "credentials"])
+const document = {...props.document}
+const type = props.type
+
+const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (props.credentials.organizationId ?? "")
+const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (props.credentials.instanceId ?? "")
+const apiKey = import.meta.env.VITE_APP_API_KEY ?? (props.credentials.apiKey ?? "")
+const host = import.meta.env.VITE_HOST_URL
+let sdk: any = null
+
+if (organizationId && instanceId && apiKey) {
+  sdk = new KaiStudio({
+    organizationId: organizationId,
+    instanceId: instanceId,
+    apiKey: apiKey
+  })
+}
+
+if (host) {
+  sdk = new KaiStudio({
+    host: host,
+    apiKey: apiKey
+  })
+}
+
+const kmAudit = sdk?.auditInstance()
 
 const informationMerge: ComputedRef<any[]> = computed(() => {
   const docsRef = document.docsRef
@@ -46,10 +68,10 @@ const informationMerge: ComputedRef<any[]> = computed(() => {
 async function setManaged() {
   switch (type) {
     case "conflict":
-      await auditStore.setConflictManaged(document.id)
+      await setConflictManaged(document.id)
       break
     case "duplicate":
-      await auditStore.setDuplicateManaged(document.id)
+      await setDuplicateManaged(document.id)
       break
   }
 }
@@ -57,6 +79,27 @@ async function setManaged() {
 function goTo(element: any) {
   window.open(element.url, '_blank')
 }
+
+async function setDuplicateManaged(documentId: number) {
+  if (!sdk) {
+    return
+  }
+  let result = await kmAudit.setDuplicatedInformationManaged(documentId)
+  if (result) {
+    document.state = "MANAGED"
+  }
+}
+
+async function setConflictManaged(documentId: number) {
+  if (!sdk) {
+    return
+  }
+  let result = await kmAudit.setConflictManaged(documentId)
+  if (result) {
+    document.state = "MANAGED"
+  }
+}
+
 </script>
 
 <style scoped lang="scss">

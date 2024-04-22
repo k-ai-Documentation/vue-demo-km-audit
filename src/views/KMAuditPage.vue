@@ -19,54 +19,82 @@
           template(#body)
             .document-type
               p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
-      document-card.document-card(v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + element.status" :type="menu")
+      document-card.document-card(v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + element.status" :type="menu" :credentials="credentials")
     .missing-subjects(v-if="menu == 'subject' && loaded")
       .text-white.text-bold-20.sub-title Missing subjects
       missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
     .loader-block(v-if="!loaded" )
       loader.loader(color="white" )
-    p.notification.text-grey.text-regular-12(v-if="(!documentsToShow.length || !documentsToManageList.length || !relatedDocumentList.length) && loaded") No result
+    p.notification.text-grey.text-regular-12(v-if="showNoResult") No result
 
 </template>
 
 <script setup lang="ts">
 import {computed, type ComputedRef, ref, type Ref, watch} from "vue";
 import DocumentCard from "@/components/DocumentCard.vue";
-import {useAuditStore} from "@/stores/AuditStore";
-import {storeToRefs} from "pinia";
 import DocumentList from "@/components/DocumentList.vue";
 import MissingSubjectCard from "@/components/MissingSubjectCard.vue";
 import DropdownSelect from "@/components/DropdownSelect.vue";
 import Loader from "@/components/Loader.vue";
+import {KaiStudio} from "sdk-js";
 
 const menu: Ref<string> = ref('toManage')
 const selectedType: Ref<string> = ref('All')
 const loaded: Ref<boolean> = ref(false)
-const auditStore = useAuditStore()
+const props = defineProps(["credentials"])
 const typeList: Ref<string[]> = ref(["All", "Managed", "Detected"])
 
-const {
-  conflictInformationList,
-  duplicatedInformationList,
-  documentsToManageList,
-  missingSubjects
-} = storeToRefs(auditStore)
+let conflictInformationList: Ref<any[]> = ref([]);
+let duplicatedInformationList: Ref<any[]> = ref([]);
+let documentsToManageList: Ref<any[]> = ref([]);
+let missingSubjects: Ref<any[]> = ref([]);
+let credentials = {...props.credentials}
+
+const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (credentials.organizationId ?? "")
+const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (credentials.instanceId ?? "")
+const apiKey = import.meta.env.VITE_APP_API_KEY ?? (credentials.apiKey ?? "")
+const host = import.meta.env.VITE_HOST_URL
+let sdk: any = null
+
+credentials = {
+  organizationId: organizationId ?? '',
+  instanceId: instanceId ?? '',
+  apiKey: apiKey ?? '',
+  host: host ?? ''
+}
+
+if (organizationId && instanceId && apiKey) {
+  sdk = new KaiStudio({
+    organizationId: organizationId,
+    instanceId: instanceId,
+    apiKey: apiKey
+  })
+}
+
+if (host) {
+  sdk = new KaiStudio({
+    host: host,
+    apiKey: apiKey
+  })
+}
+
+const kmAudit = sdk?.auditInstance()
 
 watch(menu, async () => {
   selectedType.value = "All"
   loaded.value = false
   switch (menu.value) {
     case "toManage":
-      await auditStore.getDocumentsToManageList(20, 0)
+      await getDocumentsToManageList(20, 0)
       break
     case "conflict":
-      await auditStore.getConflictInformation(20, 0)
+      await getConflictInformation(20, 0)
       break
     case "duplicate":
-      await auditStore.getDuplicatedInformation(20, 0)
+      await getDuplicatedInformation(20, 0)
       break
     case "subject":
-      await auditStore.getMissingSubjectList(20, 0)
+      await getMissingSubjectList(20, 0)
       break
   }
   loaded.value = true
@@ -75,6 +103,12 @@ watch(menu, async () => {
 
 const otherTypes: ComputedRef<string[]> = computed(() => {
   return typeList.value.filter((t: string) => t != selectedType.value)
+})
+
+const showNoResult: ComputedRef<boolean> = computed(() => {
+  return ((!missingSubjects.value.length && (menu.value == 'subject')) ||
+      (!documentsToManageList.value.length && menu.value == 'toManage') ||
+      (!relatedDocumentList.value.length && (menu.value == 'conflict' || menu.value == 'duplicate'))) && loaded.value
 })
 
 const relatedDocumentList: ComputedRef<string[]> = computed(() => {
@@ -86,10 +120,112 @@ const documentsToShow: ComputedRef<any[]> = computed(() => {
     return relatedDocumentList.value
   }
 
-  return relatedDocumentList.value.filter((document:any) => {
+  return relatedDocumentList.value.filter((document: any) => {
     return document.state == selectedType.value.toUpperCase()
   })
 })
+
+async function getConflictInformation(limit: number, initialOffset: number) {
+  if (!sdk) {
+    return
+  }
+
+  if (initialOffset == 0) {
+    conflictInformationList.value = []
+  }
+
+  let offset = initialOffset
+  let result = await kmAudit.getConflictInformation(20, offset)
+  if (result) {
+    for (let index = 0; index < result.length; index++) {
+      let document = result[index]
+      if (document && document.docsRef && document.docsRef.length) {
+        conflictInformationList.value.push(document)
+      }
+    }
+  }
+  if (result && result.length == limit) {
+    offset = offset + limit
+    await getConflictInformation(20, offset)
+  }
+}
+
+
+async function getDuplicatedInformation(limit: number, initialOffset: number) {
+  if (!sdk) {
+    return
+  }
+
+  if (initialOffset == 0) {
+    duplicatedInformationList.value = []
+  }
+
+  let offset = initialOffset
+  let result = await kmAudit.getDuplicatedInformation(20, offset)
+  if (result) {
+    for (let index = 0; index < result.length; index++) {
+      let document = result[index]
+      if (document && document.docsRef && document.docsRef.length) {
+        duplicatedInformationList.value.push(document)
+      }
+    }
+  }
+  if (result && result.length == limit) {
+    offset = offset + limit
+    await getDuplicatedInformation(limit, offset)
+  }
+}
+
+async function getDocumentsToManageList(limit: number, initialOffset: number) {
+  if (!sdk) {
+    return
+  }
+
+  if (initialOffset == 0) {
+    documentsToManageList.value = []
+  }
+
+  let offset = initialOffset
+  let result = await kmAudit.getDocumentsToManageList(20, offset)
+  if (result) {
+    for (let index = 0; index < result.length; index++) {
+      let document = result[index]
+      if (document) {
+        documentsToManageList.value.push(document)
+      }
+    }
+  }
+  if (result && result.length == limit) {
+    offset = offset + limit
+    await getDocumentsToManageList(limit, offset)
+  }
+}
+
+
+async function getMissingSubjectList(limit: number, initialOffset: number) {
+  if (!sdk) {
+    return
+  }
+
+  if (initialOffset == 0) {
+    missingSubjects.value = []
+  }
+
+  let offset = initialOffset
+  let result = await kmAudit.getMissingSubjectList(20, offset)
+  if (result) {
+    for (let index = 0; index < result.length; index++) {
+      let subject = result[index]
+      if (subject) {
+        missingSubjects.value.push(subject)
+      }
+    }
+  }
+  if (result && result.length == limit) {
+    offset = offset + limit
+    await getMissingSubjectList(limit, offset)
+  }
+}
 
 </script>
 
