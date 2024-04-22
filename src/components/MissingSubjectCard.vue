@@ -2,12 +2,12 @@
   .missing-subject
     .top
       p.text-white.text-bold-14 Subject: {{subject.subject}}
-    p.information
+    .information
       p.text-bold-14.text-grey.involved-information Needed information:
       p.text-regular-14.text-white {{subject.information_needed}}
     .questions
       p.text-bold-14.text-grey.question Questions:
-      p.text-regular-14.text-white(v-for="question in subject.questions") · {{question}}
+      p.text-regular-14.text-white.question(v-for="question in subject.questions") · {{question}}
 </template>
 
 <script setup lang="ts">
@@ -36,9 +36,11 @@ const subject = pros.subject
     &:last-child {
       margin-bottom: 0;
     }
+  }
 
-    .name, .involved-information, .question {
-      margin-bottom: 5px;
+  .questions {
+    .question {
+      margin-bottom: 3px;
     }
   }
 }
