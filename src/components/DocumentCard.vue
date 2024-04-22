@@ -16,11 +16,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type ComputedRef} from "vue";
+import {computed, type ComputedRef, ref, type Ref} from "vue";
 import {KaiStudio} from "sdk-js";
 
 const props = defineProps(['document', 'type', "credentials"])
-const document = {...props.document}
+const document = props.document
 const type = props.type
 
 const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (props.credentials.organizationId ?? "")
@@ -85,9 +85,7 @@ async function setDuplicateManaged(documentId: number) {
     return
   }
   let result = await kmAudit.setDuplicatedInformationManaged(documentId)
-  if (result) {
-    document.state = "MANAGED"
-  }
+  document.state = "MANAGED"
 }
 
 async function setConflictManaged(documentId: number) {
@@ -95,9 +93,7 @@ async function setConflictManaged(documentId: number) {
     return
   }
   let result = await kmAudit.setConflictManaged(documentId)
-  if (result) {
-    document.state = "MANAGED"
-  }
+  document.state = "MANAGED"
 }
 
 </script>

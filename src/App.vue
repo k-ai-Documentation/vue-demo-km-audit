@@ -1,5 +1,6 @@
 <template lang="pug">
   .app
+    .header.text-regular-32.text-white KM Audit Demo
     KMAuditPage
 </template>
 

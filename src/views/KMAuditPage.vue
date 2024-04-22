@@ -1,6 +1,5 @@
 <template lang="pug">
   .km-audit-page
-    .header.text-regular-32.text-white KM Audit Demo
     .tabs
       p.text-regular-16(:class="{ active: menu == 'toManage' }" @click="menu = 'toManage'") Documents to manage
       p.text-regular-16(:class="{ active: menu == 'conflict' }"  @click="menu = 'conflict'") Conflict information
