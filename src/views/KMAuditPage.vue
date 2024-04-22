@@ -24,7 +24,7 @@
       missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
     .loader-block(v-if="!loaded" )
       loader.loader(color="white" )
-    p.notification.text-grey.text-regular-12(v-if="showNoResult") No result
+    p.notification.text-grey.text-regular-16(v-if="showNoResult") No result
 
 </template>
 

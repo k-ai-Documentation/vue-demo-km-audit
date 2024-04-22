@@ -37,7 +37,7 @@ const subject = pros.subject
       margin-bottom: 0;
     }
 
-    .name, .involved-information {
+    .name, .involved-information, .question {
       margin-bottom: 5px;
     }
   }
