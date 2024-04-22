@@ -11,11 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import {useAuditStore} from "@/stores/AuditStore";
-
 const pros = defineProps(['subject'])
 const subject = pros.subject
-const auditStore = useAuditStore()
 </script>
 
 <style scoped lang="scss">
