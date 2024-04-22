@@ -5,7 +5,7 @@
       p.text-white
         span.text-regular-14 State:
         span.text-bold-14.state {{document.state}}
-    p.information(v-for="element in informationMerge")
+    .information(v-for="element in informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-bold-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white.detail {{element.information_involved}}
@@ -116,6 +116,18 @@ async function setConflictManaged(documentId: number) {
   .information {
     margin-bottom: 15px;
 
+    .name, .involved-information {
+      margin-bottom: 5px;
+    }
+
+    .name {
+      cursor: pointer;
+
+      &:hover {
+        color: var(--primary-color)
+      }
+    }
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -123,18 +135,6 @@ async function setConflictManaged(documentId: number) {
 
   .state {
     margin-left: 5px
-  }
-
-  .name, .involved-information {
-    margin-bottom: 5px;
-  }
-
-  .name {
-    cursor: pointer;
-
-    &:hover {
-      color: var(--primary-color)
-    }
   }
 
   .bottom {
