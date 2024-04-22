@@ -31,11 +31,11 @@
 
 <script setup lang="ts">
 import {computed, type ComputedRef, ref, type Ref, watch} from "vue";
-import DocumentCard from "@/components/DocumentCard.vue";
-import DocumentList from "@/components/DocumentList.vue";
-import MissingSubjectCard from "@/components/MissingSubjectCard.vue";
-import DropdownSelect from "@/components/DropdownSelect.vue";
-import Loader from "@/components/Loader.vue";
+import DocumentCard from "./../components/DocumentCard.vue";
+import DocumentList from "./../components/DocumentList.vue";
+import MissingSubjectCard from "./../components/MissingSubjectCard.vue";
+import DropdownSelect from "./../components/DropdownSelect.vue";
+import Loader from "./../components/Loader.vue";
 import {KaiStudio} from "sdk-js";
 
 const menu: Ref<string> = ref('toManage')
