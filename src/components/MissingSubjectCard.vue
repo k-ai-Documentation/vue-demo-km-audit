@@ -6,7 +6,7 @@
       p.text-bold-14.text-grey.involved-information Needed information:
       p.text-regular-14.text-white {{subject.information_needed}}
     .questions
-      p.text-bold-14.text-grey.questions Questions:
+      p.text-bold-14.text-grey.question Questions:
       p.text-regular-14.text-white(v-for="question in subject.questions") · {{question}}
 </template>
 
