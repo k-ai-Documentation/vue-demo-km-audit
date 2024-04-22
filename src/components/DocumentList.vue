@@ -1,5 +1,5 @@
 <template lang="pug">
-  .document-list(:key="documentList && documentList.length")
+  .document-list(v-if="documentList.length")
     table.files
       thead
         tr
