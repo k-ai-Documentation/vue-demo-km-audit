@@ -8,7 +8,7 @@
     p.information(v-for="element in informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-bold-14.text-grey.involved-information Involved information:
-      p.text-regular-14.text-white {{element.information_involved}}
+      p.text-regular-14.text-white.detail {{element.information_involved}}
     .bottom(v-if="document.state != 'MANAGED'")
       button.btn-icon-text(@click="setManaged()") Set managed
 
@@ -140,6 +140,10 @@ async function setConflictManaged(documentId: number) {
   .bottom {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .detail {
+    line-height: 1.3;
   }
 }
 </style>
