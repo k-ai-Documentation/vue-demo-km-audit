@@ -7,7 +7,7 @@
       p.text-regular-16(:class="{ active: menu == 'subject' }" @click="menu = 'subject'") Missing subjects
     .documents-to-manage(v-if="menu == 'toManage' && loaded")
       .text-white.text-bold-20.sub-title Documents to manage
-      document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length")
+      document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length" :credentials="credentials")
     .related-documents(v-if="(menu == 'conflict' || menu == 'duplicate') && loaded")
       .top
         .text-white.text-bold-20.sub-title {{menu == 'conflict' ? "Conflict information" : "Duplicate information"}}
@@ -68,9 +68,7 @@ if (organizationId && instanceId && apiKey) {
     instanceId: instanceId,
     apiKey: apiKey
   })
-}
-
-if (host) {
+} else if (host) {
   sdk = new KaiStudio({
     host: host,
     apiKey: apiKey

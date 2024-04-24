@@ -11,11 +11,62 @@
 </template>
 
 <script setup lang="ts">
-const pros = defineProps(['documentList'])
-const documentList = pros.documentList
+import Buffer from "vue-buffer"
+import axios from 'axios'
 
-function goTo(file: any) {
-  window.open(file.url, '_blank')
+const pros = defineProps(['documentList', 'credentials'])
+const documentList = pros.documentList
+const credentials = pros.credentials
+
+
+async function goTo(file: any) {
+
+  if (file.url.indexOf("/api/orchestrator/files/download") != -1) {
+
+    let hostUrl = import.meta.env.VITE_HOST_URL
+    let baseUrl = ""
+    let headers = {}
+
+    if (hostUrl) {
+      baseUrl = import.meta.env.VITE_HOST_URL
+      headers = {
+        'Content-Type': 'application/json',
+      }
+
+    } else if (credentials && credentials.organizationId && credentials.instanceId) {
+      baseUrl = `https://${credentials.organizationId}.kai-studio.ai/${credentials.instanceId}`
+      headers = {
+        'organization-id': credentials.organizationId,
+        'instance-id': credentials.instanceId,
+        'api-key': credentials.apiKey
+      }
+    }
+
+    if (!baseUrl) {
+      return
+    }
+
+    const result = await axios({
+      url: `${baseUrl}` + file.url,
+      method: 'GET',
+      headers: headers
+    })
+
+    if (result && result.data) {
+      const buffer = Buffer.from(result.data.response);
+      const blob = new Blob([buffer]);
+      const url = window.URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      document.body.appendChild(a);
+      a.setAttribute('style', "display: none")
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  } else {
+    window.open(file.url, '_blank')
+  }
 }
 </script>
 
@@ -46,6 +97,7 @@ function goTo(file: any) {
 
   .name-td {
     cursor: pointer;
+
     &:hover {
       p {
         color: var(--primary-color)

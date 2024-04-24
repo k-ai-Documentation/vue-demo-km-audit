@@ -11,13 +11,14 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "kai-asset": "git@github.com:k-ai-Documentation/kai-assets.git",
     "pinia": "^2.1.7",
     "pug": "^3.0.2",
     "sass": "^1.75.0",
+    "sdk-js": "git@github.com:k-ai-Documentation/sdk-js.git",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "sdk-js":"git@github.com:k-ai-Documentation/sdk-js.git",
-    "kai-asset":"git@github.com:k-ai-Documentation/kai-assets.git"
+    "vue-buffer": "^0.0.1",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",

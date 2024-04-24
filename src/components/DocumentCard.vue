@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type ComputedRef, ref, type Ref} from "vue";
+import {computed, type ComputedRef} from "vue";
 import {KaiStudio} from "sdk-js";
 
 const props = defineProps(['document', 'type', "credentials"])
@@ -35,9 +35,7 @@ if (organizationId && instanceId && apiKey) {
     instanceId: instanceId,
     apiKey: apiKey
   })
-}
-
-if (host) {
+} else if (host) {
   sdk = new KaiStudio({
     host: host,
     apiKey: apiKey
