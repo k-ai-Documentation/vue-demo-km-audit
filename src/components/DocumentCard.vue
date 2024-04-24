@@ -1,15 +1,15 @@
 <template lang="pug">
   .document-card
     .top
-      p.text-white.text-bold-14 Subject: {{document.subject}}
+      p.text-white.text-bold-14 Subject: {{file.subject}}
       p.text-white
         span.text-regular-14 State:
-        span.text-bold-14.state {{document.state}}
+        span.text-bold-14.state {{file.state}}
     .information(v-for="element in informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-bold-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white.detail {{element.information_involved}}
-    .bottom(v-if="document.state != 'MANAGED'")
+    .bottom(v-if="file.state != 'MANAGED'")
       button.btn-icon-text(@click="setManaged()") Set managed
 
 
@@ -22,7 +22,7 @@ import Buffer from "vue-buffer";
 import axios from "axios";
 
 const props = defineProps(['document', 'type', "credentials"])
-const document = props.document
+const file = props.document
 const credentials = props.credentials
 const type = props.type
 
@@ -48,8 +48,8 @@ if (organizationId && instanceId && apiKey) {
 const kmAudit = sdk?.auditInstance()
 
 const informationMerge: ComputedRef<any[]> = computed(() => {
-  const docsRef = document.docsRef
-  const documents = document.documents
+  const docsRef = file.docsRef
+  const documents = file.documents
   let toReturn: any = []
   if (docsRef && documents) {
     docsRef.forEach((docRef: any) => {
@@ -69,10 +69,10 @@ const informationMerge: ComputedRef<any[]> = computed(() => {
 async function setManaged() {
   switch (type) {
     case "conflict":
-      await setConflictManaged(document.id)
+      await setConflictManaged(file.id)
       break
     case "duplicate":
-      await setDuplicateManaged(document.id)
+      await setDuplicateManaged(file.id)
       break
   }
 }
@@ -132,7 +132,7 @@ async function setDuplicateManaged(documentId: number) {
     return
   }
   let result = await kmAudit.setDuplicatedInformationManaged(documentId)
-  document.state = "MANAGED"
+  file.state = "MANAGED"
 }
 
 async function setConflictManaged(documentId: number) {
@@ -140,7 +140,7 @@ async function setConflictManaged(documentId: number) {
     return
   }
   let result = await kmAudit.setConflictManaged(documentId)
-  document.state = "MANAGED"
+  file.state = "MANAGED"
 }
 
 </script>
