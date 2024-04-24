@@ -18,14 +18,17 @@
 <script setup lang="ts">
 import {computed, type ComputedRef} from "vue";
 import {KaiStudio} from "sdk-js";
+import Buffer from "vue-buffer";
+import axios from "axios";
 
 const props = defineProps(['document', 'type', "credentials"])
 const document = props.document
+const credentials = props.credentials
 const type = props.type
 
-const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (props.credentials.organizationId ?? "")
-const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (props.credentials.instanceId ?? "")
-const apiKey = import.meta.env.VITE_APP_API_KEY ?? (props.credentials.apiKey ?? "")
+const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (credentials.organizationId ?? "")
+const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (credentials.instanceId ?? "")
+const apiKey = import.meta.env.VITE_APP_API_KEY ?? (credentials.apiKey ?? "")
 const host = import.meta.env.VITE_HOST_URL
 let sdk: any = null
 
@@ -74,8 +77,54 @@ async function setManaged() {
   }
 }
 
-function goTo(element: any) {
-  window.open(element.url, '_blank')
+async function goTo(file: any) {
+
+  if (file.url.indexOf("/api/orchestrator/files/download") != -1) {
+
+    let hostUrl = import.meta.env.VITE_HOST_URL
+    let baseUrl = ""
+    let headers = {}
+
+    if (hostUrl) {
+      baseUrl = import.meta.env.VITE_HOST_URL
+      headers = {
+        'Content-Type': 'application/json',
+      }
+
+    } else if (credentials && credentials.organizationId && credentials.instanceId) {
+      baseUrl = `https://${credentials.organizationId}.kai-studio.ai/${credentials.instanceId}`
+      headers = {
+        'organization-id': credentials.organizationId,
+        'instance-id': credentials.instanceId,
+        'api-key': credentials.apiKey
+      }
+    }
+
+    if (!baseUrl) {
+      return
+    }
+
+    const result = await axios({
+      url: `${baseUrl}` + file.url,
+      method: 'GET',
+      headers: headers
+    })
+
+    if (result && result.data) {
+      const buffer = Buffer.from(result.data.response);
+      const blob = new Blob([buffer]);
+      const url = window.URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      document.body.appendChild(a);
+      a.setAttribute('style', "display: none")
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  } else {
+    window.open(file.url, '_blank')
+  }
 }
 
 async function setDuplicateManaged(documentId: number) {
