@@ -89,7 +89,12 @@ async function goTo(file: any) {
       td {
         height: 50px;
         line-height: 50px;
-        vertical-align: middle
+        p {
+          cursor: pointer;
+          &:hover {
+            color: var(--primary-color);
+          }
+        }
       }
     }
   }
