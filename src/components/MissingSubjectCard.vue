@@ -36,6 +36,10 @@ const subject = pros.subject
     &:last-child {
       margin-bottom: 0;
     }
+
+    .needed-information {
+      margin-bottom: 5px;
+    }
   }
 
   .questions {
