@@ -71,5 +71,27 @@ async function goTo(file: any) {
 </script>
 
 <style scoped lang="scss">
+.files {
+  width: 100%;
+  thead {
+    th {
+      height: 3rem;
+      line-height: 3rem;
+      min-width: 15%;
+      text-align: left;
+    }
+  }
 
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--color-border);
+
+      td {
+        height: 50px;
+        line-height: 50px;
+        vertical-align: middle
+      }
+    }
+  }
+}
 </style>
