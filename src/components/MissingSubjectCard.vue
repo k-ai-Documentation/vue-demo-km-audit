@@ -6,8 +6,8 @@
       p.text-bold-14.text-grey.needed-information Needed information:
       p.text-regular-14.text-white {{subject.information_needed}}
     .questions
-      p.text-bold-14.text-grey.question Questions:
-      p.text-regular-14.text-white.question(v-for="question in subject.questions") · {{question}}
+      p.text-bold-14.text-grey.question Related questions:
+      p.text-regular-14.text-white.question(v-for="question in subject.questions") - {{question}}
 </template>
 
 <script setup lang="ts">
@@ -22,16 +22,17 @@ const subject = pros.subject
   margin-bottom: 20px;
   width: calc(100% - 200px);
   padding: 20px;
+  background: var(--dark-grey-color);
 
   .top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
   }
 
   .information {
-    margin-bottom: 15px;
+    margin-bottom: 23px;
 
     &:last-child {
       margin-bottom: 0;
