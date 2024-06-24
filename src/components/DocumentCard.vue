@@ -14,7 +14,7 @@
     .open-all
       .action(@click="downloadAll()")
         p.text-regular-14.text-white Open all this documents
-        img.icon-18(src="@/assets/share.svg" alt="Open all this documents")
+        img.icon-18(src="kai-asset/share.svg" alt="Open all this documents")
 
 
 </template>
