@@ -2,21 +2,21 @@
   .document-card
     .top
       p.text-white.text-bold-14 Subject: {{file.subject}}
-      p.text-white
-        span.text-regular-14 State:
-        span.text-bold-14.state {{file.state}}
+      .toggle-block(@click="setManaged()")
+        p.text-white.text-regular-12 Detected
+        .toggle(:class= "{'checked': status == 'MANAGED'}")
+          .circle
+        p.text-white.text-regular-12 Managed
     .information(v-for="element in informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
-      p.text-bold-14.text-grey.involved-information Involved information:
+      p.text-regular-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white.detail {{element.information_involved}}
-    .bottom(v-if="file.state != 'MANAGED'")
-      button.btn-icon-text(@click="setManaged()") Set managed
 
 
 </template>
 
 <script setup lang="ts">
-import {computed, type ComputedRef} from "vue";
+import {computed, type ComputedRef, ref, type Ref} from "vue";
 import {KaiStudio} from "sdk-js";
 import Buffer from "vue-buffer";
 import axios from "axios";
@@ -31,6 +31,7 @@ const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (credentials.instance
 const apiKey = import.meta.env.VITE_APP_API_KEY ?? (credentials.apiKey ?? "")
 const host = import.meta.env.VITE_HOST_URL
 let sdk: any = null
+let status: Ref<string> = ref(file.state)
 
 if (organizationId && instanceId && apiKey) {
   sdk = new KaiStudio({
@@ -67,6 +68,7 @@ const informationMerge: ComputedRef<any[]> = computed(() => {
 })
 
 async function setManaged() {
+  status.value = "MANAGED"
   switch (type) {
     case "conflict":
       await setConflictManaged(file.id)
@@ -150,18 +152,48 @@ async function setConflictManaged(documentId: number) {
   border-radius: 10px;
   border: 2px solid var(--color-border);
   margin-bottom: 20px;
-  width: 800px;
+  width: calc(100% - 200px);
   padding: 20px;
+  background: var(--dark-grey-color);
 
   .top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
+  }
+
+  .toggle-block {
+    display: flex;
+    align-items: center;
+
+    .toggle {
+      width: 40px;
+      height: 20px;
+      margin: 0 10px;
+      display: flex;
+      align-items: center;
+      background: var(--grey-color);
+      border-radius: 25px;
+      cursor: pointer;
+      padding: 5px;
+
+      &.checked {
+        justify-content: flex-end;
+        background-color: var(--primary-color);
+      }
+
+      .circle {
+        height: 12px;
+        width: 12px;
+        border-radius: 100%;
+        background: var(--white-color);
+      }
+    }
   }
 
   .information {
-    margin-bottom: 15px;
+    margin-bottom: 23px;
 
     .name, .involved-information {
       margin-bottom: 5px;

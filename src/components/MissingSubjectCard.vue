@@ -20,7 +20,7 @@ const subject = pros.subject
   border-radius: 10px;
   border: 2px solid var(--color-border);
   margin-bottom: 20px;
-  width: 800px;
+  width: calc(100% - 200px);
   padding: 20px;
 
   .top {

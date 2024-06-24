@@ -1,17 +1,15 @@
 <template lang="pug">
   .km-audit-page
     .tabs
-      p.text-regular-16(:class="{ active: menu == 'toManage' }" @click="menu = 'toManage'") Documents to manage
-      p.text-regular-16(:class="{ active: menu == 'conflict' }"  @click="menu = 'conflict'") Conflict information
-      p.text-regular-16(:class="{ active: menu == 'duplicate' }" @click="menu = 'duplicate'") Duplicate information
-      p.text-regular-16(:class="{ active: menu == 'subject' }" @click="menu = 'subject'") Missing subjects
+      p.text-regular-14(:class="{ active: menu == 'toManage' }" @click="menu = 'toManage'") Documents to manage
+      p.text-regular-14(:class="{ active: menu == 'conflict' }"  @click="menu = 'conflict'") Conflict information
+      p.text-regular-14(:class="{ active: menu == 'duplicate' }" @click="menu = 'duplicate'") Duplicate information
+      p.text-regular-14(:class="{ active: menu == 'subject' }" @click="menu = 'subject'") Missing subjects
     .documents-to-manage(v-if="menu == 'toManage' && loaded")
-      .text-white.text-bold-20.sub-title Documents to manage
       document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length" :credentials="credentials")
     .related-documents(v-if="(menu == 'conflict' || menu == 'duplicate') && loaded")
-      .top
-        .text-white.text-bold-20.sub-title {{menu == 'conflict' ? "Conflict information" : "Duplicate information"}}
-        DropdownSelect.filter(v-if="typeList && relatedDocumentList.length")
+      .top(v-if="typeList && relatedDocumentList.length")
+        DropdownSelect.filter
           template(#trigger)
             div.selected-type
               p.text-regular-14.text-white {{ selectedType }}
@@ -20,11 +18,10 @@
               p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
       document-card.document-card(v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + element.status" :type="menu" :credentials="credentials")
     .missing-subjects(v-if="menu == 'subject' && loaded")
-      .text-white.text-bold-20.sub-title Missing subjects
       missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
     .loader-block(v-if="!loaded" )
       loader.loader(color="white" )
-    p.notification.text-grey.text-regular-16(v-if="showNoResult") No result
+    p.notification.text-grey.text-regular-14(v-if="showNoResult") No result
 
 </template>
 
@@ -308,8 +305,8 @@ async function getMissingSubjectList(limit: number, initialOffset: number) {
 .related-documents {
   .top {
     display: flex;
-    justify-content: space-between;
-    width: 800px;
+    justify-content: flex-end;
+    width: calc(100% - 200px);
     height: 32px;
     align-items: center;
     margin-bottom: 20px;
