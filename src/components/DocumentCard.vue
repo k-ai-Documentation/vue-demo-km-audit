@@ -195,12 +195,13 @@ async function setConflictManaged(documentId: number) {
   .information {
     margin-bottom: 23px;
 
-    .name, .involved-information {
+    .involved-information {
       margin-bottom: 5px;
     }
 
     .name {
       cursor: pointer;
+      margin-bottom: 8px;
 
       &:hover {
         color: var(--primary-color)
