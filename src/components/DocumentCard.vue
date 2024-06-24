@@ -11,6 +11,10 @@
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-regular-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white.detail {{element.information_involved}}
+    .open-all
+      .action(@click="downloadAll()")
+        p.text-regular-14.text-white Open all this documents
+        img.icon-18(src="@/assets/share.svg" alt="Open all this documents")
 
 
 </template>
@@ -108,7 +112,7 @@ async function goTo(file: any) {
 
     const result = await axios({
       url: `${baseUrl}` + file.url,
-      method: 'GET',
+      method: 'POST',
       headers: headers
     })
 
@@ -133,7 +137,7 @@ async function setDuplicateManaged(documentId: number) {
   if (!sdk) {
     return
   }
-  let result = await kmAudit.setDuplicatedInformationManaged(documentId)
+  await kmAudit.setDuplicatedInformationManaged(documentId)
   file.state = "MANAGED"
 }
 
@@ -141,8 +145,14 @@ async function setConflictManaged(documentId: number) {
   if (!sdk) {
     return
   }
-  let result = await kmAudit.setConflictManaged(documentId)
+  await kmAudit.setConflictManaged(documentId)
   file.state = "MANAGED"
+}
+
+function downloadAll() {
+  informationMerge.value.forEach(async el => {
+    await goTo(el)
+  })
 }
 
 </script>
@@ -224,6 +234,23 @@ async function setConflictManaged(documentId: number) {
 
   .detail {
     line-height: 1.3;
+  }
+
+  .open-all {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    .action {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      cursor: pointer;
+
+      p {
+        margin-right: 10px;
+      }
+    }
   }
 }
 </style>

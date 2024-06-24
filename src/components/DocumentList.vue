@@ -48,7 +48,7 @@ async function goTo(file: any) {
 
     const result = await axios({
       url: `${baseUrl}` + file.url,
-      method: 'GET',
+      method: 'POST',
       headers: headers
     })
 
