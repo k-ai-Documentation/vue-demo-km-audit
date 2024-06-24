@@ -8,8 +8,8 @@
     .documents-to-manage(v-if="menu == 'toManage' && loaded && documentsToManageList && documentsToManageList.length")
       document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length" :credentials="credentials")
     .related-documents(v-if="(menu == 'conflict' || menu == 'duplicate') && loaded")
-      .top(v-if="typeList && relatedDocumentList.length")
-        DropdownSelect.filter
+      .top
+        DropdownSelect.filter(v-if="typeList && relatedDocumentList.length")
           template(#trigger)
             div.selected-type
               p.text-regular-14.text-white {{ selectedType }}
@@ -354,7 +354,4 @@ async function getMissingSubjectList(limit: number, initialOffset: number) {
   justify-content: center;
 }
 
-.notification {
-  padding-top: 40px
-}
 </style>
