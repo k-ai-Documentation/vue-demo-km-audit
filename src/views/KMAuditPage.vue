@@ -5,7 +5,7 @@
       p.text-regular-14(:class="{ active: menu == 'conflict' }"  @click="menu = 'conflict'") Conflict information
       p.text-regular-14(:class="{ active: menu == 'duplicate' }" @click="menu = 'duplicate'") Duplicate information
       p.text-regular-14(:class="{ active: menu == 'subject' }" @click="menu = 'subject'") Missing subjects
-    .documents-to-manage(v-if="menu == 'toManage' && loaded")
+    .documents-to-manage(v-if="menu == 'toManage' && loaded && documentsToManageList && documentsToManageList.length")
       document-list(:document-list="documentsToManageList" :key="'document_to_manage_list_' + documentsToManageList.length" :credentials="credentials")
     .related-documents(v-if="(menu == 'conflict' || menu == 'duplicate') && loaded")
       .top(v-if="typeList && relatedDocumentList.length")
@@ -17,7 +17,7 @@
             .document-type
               p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
       document-card.document-card(v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + element.status" :type="menu" :credentials="credentials")
-    .missing-subjects(v-if="menu == 'subject' && loaded")
+    .missing-subjects(v-if="menu == 'subject' && loaded && missingSubjects && missingSubjects.length")
       missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
     .loader-block(v-if="!loaded" )
       loader.loader(color="white" )
