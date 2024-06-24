@@ -303,6 +303,8 @@ async function getMissingSubjectList(limit: number, initialOffset: number) {
 }
 
 .related-documents {
+  margin-top: -50px;
+
   .top {
     display: flex;
     justify-content: flex-end;
@@ -350,5 +352,9 @@ async function getMissingSubjectList(limit: number, initialOffset: number) {
   align-items: center;
   height: 60vh;
   justify-content: center;
+}
+
+.notification {
+  padding-top: 40px
 }
 </style>
