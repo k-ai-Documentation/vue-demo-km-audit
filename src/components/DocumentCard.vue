@@ -234,6 +234,7 @@ function downloadAll() {
 
   .detail {
     line-height: 1.3;
+    white-space: pre-wrap;
   }
 
   .open-all {
