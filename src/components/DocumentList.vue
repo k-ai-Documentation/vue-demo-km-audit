@@ -4,10 +4,16 @@
       thead
         tr
           th.text-medium-14.text-grey Name
+          th.text-medium-14.text-grey Conflicts number
+          th.text-medium-14.text-grey Duplicates number
       tbody
-        tr(v-for="(file, index) in documentList" :key="file.name" @click="goTo(file)")
+        tr(v-for="(file, index) in documentList" :key="file.name")
           td.name-td(width=576)
-            p.text-white.text-regular-14 {{ file.name }}
+            p.text-white.text-regular-14(@click="goTo(file)") {{ file.name }}
+          td.conflict(width=300)
+            p.text-white.text-regular-14 {{ file.count_conflicts }}
+          td.duplicate(width=300)
+            p.text-white.text-regular-14 {{ file.count_duplicates }}
 </template>
 
 <script setup lang="ts">
@@ -89,11 +95,14 @@ async function goTo(file: any) {
       td {
         height: 50px;
         line-height: 50px;
-        p {
-          cursor: pointer;
-          &:hover {
-            color: var(--primary-color);
+        &.name-td {
+          p {
+            cursor: pointer;
+            &:hover {
+                color: var(--primary-color);
+            }
           }
+          
         }
       }
     }
