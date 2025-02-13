@@ -40,7 +40,7 @@ async function goTo(file: any) {
       }
 
     } else if (credentials && credentials.organizationId && credentials.instanceId) {
-      baseUrl = `https://${credentials.organizationId}.kai-studio.ai/${credentials.instanceId}`
+      baseUrl = `https://api.kai-studio.ai`
       headers = {
         'organization-id': credentials.organizationId,
         'instance-id': credentials.instanceId,
@@ -55,7 +55,10 @@ async function goTo(file: any) {
     const result = await axios({
       url: `${baseUrl}` + file.url,
       method: 'POST',
-      headers: headers
+      headers: headers,
+      data: {
+        id: file.id
+      }
     })
 
     if (result && result.data) {
