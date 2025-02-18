@@ -3,7 +3,7 @@
     .top
       p.text-white.text-bold-14 Subject: {{file.subject}}
       .toggle-block
-        p.text-white.text-medium-14(v-if="state == 'MANAGED' || status == 'MANAGED'" ) {{status}}
+        p.text-white.text-medium-14(v-if="state == 'MANAGED' || status == 'MANAGED' || status == 'IGNORED' || state == 'IGNORED'"  ) {{status}}
         DropdownSelect(v-else)
             template(#trigger)
                 .trigger

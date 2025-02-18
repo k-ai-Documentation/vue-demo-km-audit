@@ -38,7 +38,7 @@ const menu: Ref<string> = ref('toManage')
 const selectedType: Ref<string> = ref('All')
 const loaded: Ref<boolean> = ref(false)
 const props = defineProps(["credentials"])
-const typeList: Ref<string[]> = ref(["All", "Managed", "Detected"])
+const typeList: Ref<string[]> = ref(["All", "Managed", "Detected", "Ignored"])
 
 let conflictInformationList: Ref<any[]> = ref([]);
 let duplicatedInformationList: Ref<any[]> = ref([]);
