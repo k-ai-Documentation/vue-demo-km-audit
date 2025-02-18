@@ -2,11 +2,15 @@
   .document-card
     .top
       p.text-white.text-bold-14 Subject: {{file.subject}}
-      .toggle-block(@click="setManaged()")
-        p.text-white.text-regular-12 Detected
-        .toggle(:class= "{'checked': status == 'MANAGED'}")
-          .circle
-        p.text-white.text-regular-12 Managed
+      .toggle-block
+        p.text-white.text-medium-14(v-if="state == 'MANAGED' || status == 'MANAGED'" ) {{status}}
+        DropdownSelect(v-else)
+            template(#trigger)
+                .trigger
+                    p.text-white.text-medium-14 {{status}}
+            template(#body)
+                .select-box(v-for="state in stateList" :key="state")
+                    p.text-white.text-medium-14( @click="setStatus(state)"  v-if="state != status") {{state}}
     .information(v-for="element in informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-regular-14.text-grey.involved-information Involved information:
@@ -24,6 +28,7 @@ import {computed, type ComputedRef, ref, type Ref} from "vue";
 import {KaiStudio} from "sdk-js";
 import Buffer from "vue-buffer";
 import axios from "axios";
+import DropdownSelect from "./DropdownSelect.vue";
 
 const props = defineProps(['document', 'type', "credentials"])
 const file = props.document
@@ -36,6 +41,7 @@ const apiKey = import.meta.env.VITE_APP_API_KEY ?? (credentials.apiKey ?? "")
 const host = import.meta.env.VITE_HOST_URL
 let sdk: any = null
 let status: Ref<string> = ref(file.state)
+const stateList: Ref<string[]> = ref(["DETECTED", "MANAGED", "IGNORED"])
 
 if (organizationId && instanceId && apiKey) {
   sdk = new KaiStudio({
@@ -71,16 +77,19 @@ const informationMerge: ComputedRef<any[]> = computed(() => {
   return toReturn
 })
 
-async function setManaged() {
-  status.value = "MANAGED"
-  switch (type) {
-    case "conflict":
-      await setConflictManaged(file.id)
-      break
-    case "duplicate":
-      await setDuplicateManaged(file.id)
-      break
-  }
+async function setStatus(state: string) {
+    if(file.state == 'MANAGED' || status.value == 'MANAGED') {
+        return
+    }
+    status.value = state
+    switch (type) {
+        case "conflict":
+            await setConflictState(file.id, state.toLowerCase())
+            break;
+        case "duplicate":
+            await setDuplicateState(file.id, state.toLowerCase())
+            break;
+    }
 }
 
 async function goTo(file: any) {
@@ -133,20 +142,20 @@ async function goTo(file: any) {
   }
 }
 
-async function setDuplicateManaged(documentId: number) {
+async function setConflictState(documentId: string, state: string) {
   if (!sdk) {
     return
   }
-  await kmAudit.setDuplicatedInformationManaged(documentId)
-  file.state = "MANAGED"
+  await kmAudit.conflictInformationSetState(documentId, state)
+  file.state = state
 }
 
-async function setConflictManaged(documentId: number) {
+async function setDuplicateState(documentId: number, state: string) {
   if (!sdk) {
     return
   }
-  await kmAudit.setConflictManaged(documentId)
-  file.state = "MANAGED"
+  await kmAudit.duplicatedInformationSetState(documentId, state)
+  file.state = state
 }
 
 function downloadAll() {
@@ -174,31 +183,25 @@ function downloadAll() {
   }
 
   .toggle-block {
-    display: flex;
-    align-items: center;
-
-    .toggle {
-      width: 40px;
-      height: 20px;
-      margin: 0 10px;
-      display: flex;
-      align-items: center;
-      background: var(--grey-color);
-      border-radius: 25px;
-      cursor: pointer;
-      padding: 5px;
-
-      &.checked {
-        justify-content: flex-end;
-        background-color: var(--primary-color);
-      }
-
-      .circle {
-        height: 12px;
-        width: 12px;
-        border-radius: 100%;
-        background: var(--white-color);
-      }
+    .trigger {
+        padding: 7px 14px 0px;
+        width: 140px;
+    }
+    .select-box {
+        width: 178px;
+        padding-left: 14px;
+        margin-bottom: 7px;
+        p {
+            &:hover {
+            color: var(--primary-color)
+            }
+        }
+        &:first-child {
+            margin-top: 7px;
+        }
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
   }
 

@@ -315,6 +315,7 @@ async function getMissingSubjectList(limit: number, initialOffset: number) {
   }
 
   .filter {
+    z-index: 3000;
     .selected-type {
       width: 140px;
       padding: 14px 0 14px 14px;
