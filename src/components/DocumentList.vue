@@ -4,8 +4,14 @@
       thead
         tr
           th.text-medium-14.text-grey Name
-          th.text-medium-14.text-grey Conflicts number
-          th.text-medium-14.text-grey Duplicates number
+          th
+            .orderby-thead(@click="orderby('count_conflicts')")
+                p.text-medium-14.text-grey Conflicts number
+                img(:src="dropdown" v-if="orderType == 'count_conflicts'" :class="orderDirection == 'asc' ? 'inversed': ''")
+          th
+            .orderby-thead(@click="orderby('count_duplicates')")
+                p.text-medium-14.text-grey Duplicates number
+                img(:src="dropdown" v-if="orderType == 'count_duplicates'" :class="orderDirection == 'asc' ? 'inversed': ''")
       tbody
         tr(v-for="(file, index) in documentList" :key="file.name")
           td.name-td(width=576)
@@ -19,11 +25,31 @@
 <script setup lang="ts">
 import Buffer from "vue-buffer"
 import axios from 'axios'
+import dropdown from 'kai-asset/icons/dropdown.svg'
+import { onMounted, ref } from "vue"
 
 const pros = defineProps(['documentList', 'credentials'])
 const documentList = pros.documentList
 const credentials = pros.credentials
 
+const orderType = ref('count_conflicts')
+const orderDirection = ref('asc')
+
+function orderby(type: string) {
+    if (orderType.value != type) {
+        orderDirection.value = 'desc'
+    }else {
+        orderDirection.value = orderDirection.value == 'asc' ? 'desc' : 'asc'
+    }
+    orderType.value = type
+    documentList.sort((a: any, b: any) => {
+        if (orderDirection.value == 'asc') {
+            return a[type] - b[type]
+        } else {
+            return b[type] - a[type]
+        }
+    })
+}
 
 async function goTo(file: any) {
 
@@ -77,6 +103,10 @@ async function goTo(file: any) {
     window.open(file.url, '_blank')
   }
 }
+
+onMounted(() => {
+  orderby('count_conflicts')
+})
 </script>
 
 <style scoped lang="scss">
@@ -88,6 +118,18 @@ async function goTo(file: any) {
       line-height: 3rem;
       min-width: 15%;
       text-align: left;
+      .orderby-thead{
+        display: flex;
+        cursor: pointer;
+      }
+    }
+    img {
+        filter: var(--svg-filter-white-color);
+
+        &.inversed {
+            transform: rotate(180deg);
+        
+        }
     }
   }
 
