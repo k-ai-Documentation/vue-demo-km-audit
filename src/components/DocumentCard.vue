@@ -11,7 +11,7 @@
             template(#body)
                 .select-box(v-for="state in stateList" :key="state")
                     p.text-white.text-medium-14( @click="setStatus(state)"  v-if="state != status") {{state}}
-    .information(v-for="element in informationMerge")
+    .information(v-for="element of informationMerge")
       p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
       p.text-regular-14.text-grey.involved-information Involved information:
       p.text-regular-14.text-white.detail {{element.information_involved}}
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, type ComputedRef, ref, type Ref} from "vue";
+import {computed, type ComputedRef, onMounted, ref, type Ref} from "vue";
 import {KaiStudio} from "sdk-js";
 import Buffer from "vue-buffer";
 import axios from "axios";
@@ -34,6 +34,7 @@ const props = defineProps(['document', 'type', "credentials"])
 const file = props.document
 const credentials = props.credentials
 const type = props.type
+const informationMerge = ref<any[]>([])
 
 const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (credentials.organizationId ?? "")
 const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (credentials.instanceId ?? "")
@@ -58,7 +59,7 @@ if (organizationId && instanceId && apiKey) {
 
 const kmAudit = sdk?.auditInstance()
 
-const informationMerge: ComputedRef<any[]> = computed(() => {
+async function fetchMergeInformation() {
   const docsRef = file.docsRef
   const documents = file.documents
   let toReturn: any = []
@@ -73,9 +74,20 @@ const informationMerge: ComputedRef<any[]> = computed(() => {
         }
       })
     })
-  }
-  return toReturn
-})
+  }else if (documents && !docsRef) {
+    const searchInstance = sdk?.search()
+    for (const doc of documents){
+        const docInfo = await searchInstance.getDocSignature(doc.docId)
+        let matchedResult = {
+            name: docInfo.name,
+            url: docInfo.url,
+            information_involved: doc.information_involved
+        }
+        toReturn.push(matchedResult)
+        }
+    }
+  informationMerge.value = toReturn
+}
 
 async function setStatus(state: string) {
     if(file.state == 'MANAGED' || status.value == 'MANAGED') {
@@ -163,6 +175,10 @@ function downloadAll() {
     await goTo(el)
   })
 }
+
+onMounted(async () => {
+  await fetchMergeInformation()
+})
 
 </script>
 

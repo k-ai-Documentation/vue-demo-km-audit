@@ -15,18 +15,37 @@
       tbody
         tr(v-for="(file, index) in documentList" :key="file.name")
           td.name-td(width=576)
-            p.text-white.text-regular-14(@click="goTo(file)") {{ file.name }}
+            p.text-white.text-regular-14(@click="showFileAnomalies(file)") {{ file.name }}
           td.conflict(width=300)
             p.text-white.text-regular-14 {{ file.count_conflicts }}
           td.duplicate(width=300)
             p.text-white.text-regular-14 {{ file.count_duplicates }}
+          td.download(width=50)
+            img(src="kai-asset/download.svg" @click="goTo(file)")
+
+    .modal-container(v-if="showModal")
+        .modal-bg(@click="closeModal()")
+        ModalTemplate.modal(@closeModal="closeModal()")
+            template(#header)
+                p.text-white.text-bold-16 Document anomalies (Conflicts and Duplicates)
+            template(#body)
+                .conflicts(v-if="anomalies && anomalies['conflicts'].length>0")
+                    p.text-white.text-bold-16.title Document Conflicts 
+                    document-card.document-card(v-for="document of anomalies['conflicts']" :document="document" :key="document.id" :type="'conflict'" :credentials="credentials")
+                .duplicates(v-if="anomalies && anomalies['duplicated'].length>0")
+                    p.text-white.text-bold-16.title Document Duplicates
+                    document-card.document-card(v-for="document of anomalies['duplicated']" :document="document" :key="document.id" :type="'duplicate'" :credentials="credentials")
+
 </template>
 
 <script setup lang="ts">
 import Buffer from "vue-buffer"
 import axios from 'axios'
 import dropdown from 'kai-asset/icons/dropdown.svg'
+import ModalTemplate from "./ModalTemplate.vue"
 import { onMounted, ref } from "vue"
+import {KaiStudio} from "sdk-js";
+import DocumentCard from "./DocumentCard.vue"
 
 const pros = defineProps(['documentList', 'credentials'])
 const documentList = pros.documentList
@@ -34,6 +53,22 @@ const credentials = pros.credentials
 
 const orderType = ref('count_conflicts')
 const orderDirection = ref('asc')
+
+const showModal = ref(false)
+const modalFileId = ref('')
+const anomalies = ref({})
+
+const sdk: any = ref(null)
+
+async function showFileAnomalies(file: any) {
+    if (!sdk.value) {
+        return
+    }
+    anomalies.value = await sdk.value.auditInstance().getAnomaliesForDoc(file.id)
+    modalFileId.value = file.id
+    showModal.value = true
+    console.log(anomalies.value)
+}
 
 function orderby(type: string) {
     if (orderType.value != type) {
@@ -51,44 +86,22 @@ function orderby(type: string) {
     })
 }
 
+function closeModal() {
+    showModal.value = false
+    anomalies.value = {}
+    modalFileId.value = ''
+}
+
 async function goTo(file: any) {
 
   if (file.url.indexOf("/api/orchestrator/files/download") != -1) {
-
-    let hostUrl = import.meta.env.VITE_HOST_URL
-    let baseUrl = ""
-    let headers = {}
-
-    if (hostUrl) {
-      baseUrl = import.meta.env.VITE_HOST_URL
-      headers = {
-        'Content-Type': 'application/json',
-      }
-
-    } else if (credentials && credentials.organizationId && credentials.instanceId) {
-      baseUrl = `https://api.kai-studio.ai`
-      headers = {
-        'organization-id': credentials.organizationId,
-        'instance-id': credentials.instanceId,
-        'api-key': credentials.apiKey
-      }
+    if (!sdk.value) {
+        return
     }
-
-    if (!baseUrl) {
-      return
-    }
-
-    const result = await axios({
-      url: `${baseUrl}` + file.url,
-      method: 'POST',
-      headers: headers,
-      data: {
-        id: file.id
-      }
-    })
+    const result = await sdk.value.fileInstance().downloadFile(file.name)
 
     if (result && result.data) {
-      const buffer = Buffer.from(result.data.response);
+      const buffer = Buffer.from(result);
       const blob = new Blob([buffer]);
       const url = window.URL.createObjectURL(blob);
       let a = document.createElement("a");
@@ -105,7 +118,20 @@ async function goTo(file: any) {
 }
 
 onMounted(() => {
-  orderby('count_conflicts')
+    if (credentials.organizationId && credentials.instanceId && credentials.apiKey) {
+        sdk.value = new KaiStudio({
+            organizationId: credentials.organizationId,
+            instanceId: credentials.instanceId,
+            apiKey: credentials.apiKey
+        })
+    } else if (credentials.host && credentials.apiKey) {
+        sdk.value = new KaiStudio({
+            host: credentials.host,
+            apiKey: credentials.apiKey
+        })
+    }
+    orderby('count_conflicts')
+
 })
 </script>
 
@@ -138,8 +164,8 @@ onMounted(() => {
       border-bottom: 1px solid var(--color-border);
 
       td {
-        height: 50px;
-        line-height: 50px;
+        height: 60px;
+        vertical-align: middle;
         &.name-td {
           p {
             cursor: pointer;
@@ -149,7 +175,48 @@ onMounted(() => {
           }
           
         }
+        &.download {
+          cursor: pointer;
+          img {
+            filter: var(--svg-filter-white-color);
+          }
+        }
       }
+    }
+  }
+}
+.modal-container {
+  z-index: 3500;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .modal-bg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 3501;
+    background-color: black;
+    opacity: 0.9;
+  }
+
+  .modal {
+    z-index: 3502;
+    height: 80%;
+    background-color: var(--color-border);
+    .title{
+        margin-bottom: 15px;
+        padding-left: 20px;
+    }
+    .document-card{
+        width: 100%;
     }
   }
 }
