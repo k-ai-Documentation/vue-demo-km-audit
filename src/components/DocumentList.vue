@@ -67,7 +67,6 @@ async function showFileAnomalies(file: any) {
     anomalies.value = await sdk.value.auditInstance().getAnomaliesForDoc(file.id)
     modalFileId.value = file.id
     showModal.value = true
-    console.log(anomalies.value)
 }
 
 function orderby(type: string) {
