@@ -17,8 +17,8 @@
       p.text-regular-14.text-white.detail {{element.information_involved}}
     .open-all
       .action(@click="downloadAll()")
-        p.text-regular-14.text-white Open all this documents
-        img.icon-18(src="kai-asset/share.svg" alt="Open all this documents")
+        p.text-regular-14.text-white Open all these documents
+        img.icon-18(src="kai-asset/share.svg" alt="Open all these documents")
 
 
 </template>
