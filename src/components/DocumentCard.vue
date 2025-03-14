@@ -11,10 +11,13 @@
             template(#body)
                 .select-box(v-for="state in stateList" :key="state")
                     p.text-white.text-medium-14( @click="setStatus(state)"  v-if="state != status") {{state}}
-    .information(v-for="element of informationMerge")
-      p.text-bold-14.text-white.name(@click="goTo(element)") {{element.name}}
-      p.text-regular-14.text-grey.involved-information Involved information:
+
+    .information(v-for="(element, index) in informationMerge" :key="index")
+      p.text-bold-14.text-white.name(@click="goTo(element)") DOC {{index+1}}: {{element.name}}
       p.text-regular-14.text-white.detail {{element.information_involved}}
+    .explanation
+      p.text-white.text-bold-14(v-if="file.explanation") Explanation: 
+      p.text-white.text-regular-14(v-if="file.explanation") {{file.explanation}}
     .open-all
       .action(@click="downloadAll()")
         p.text-regular-14.text-white Open all these documents
@@ -220,6 +223,9 @@ onMounted(async () => {
         }
     }
   }
+  .explanation {
+    margin-bottom: 10px;
+    }
 
   .information {
     margin-bottom: 23px;
@@ -230,7 +236,6 @@ onMounted(async () => {
 
     .name {
       cursor: pointer;
-      margin-bottom: 8px;
 
       &:hover {
         color: var(--primary-color)
