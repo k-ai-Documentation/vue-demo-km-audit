@@ -32,35 +32,19 @@ import {KaiStudio} from "sdk-js";
 import Buffer from "vue-buffer";
 import axios from "axios";
 import DropdownSelect from "./DropdownSelect.vue";
+import { useAnomalyStore } from '@/store/anomaly';
+import {storeToRefs} from 'pinia';
 
-const props = defineProps(['document', 'type', "credentials"])
+const props = defineProps(['document', 'type'])
 const file = props.document
-const credentials = props.credentials
 const type = props.type
 const informationMerge = ref<any[]>([])
 
-const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? (credentials.organizationId ?? "")
-const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? (credentials.instanceId ?? "")
-const apiKey = import.meta.env.VITE_APP_API_KEY ?? (credentials.apiKey ?? "")
-const host = import.meta.env.VITE_HOST_URL
-let sdk: any = null
+const anomalyStore = useAnomalyStore()
+const {sdk} = storeToRefs(anomalyStore)
+
 let status: Ref<string> = ref(file.state)
 const stateList: Ref<string[]> = ref(["DETECTED", "MANAGED", "IGNORED"])
-
-if (organizationId && instanceId && apiKey) {
-  sdk = new KaiStudio({
-    organizationId: organizationId,
-    instanceId: instanceId,
-    apiKey: apiKey
-  })
-} else if (host) {
-  sdk = new KaiStudio({
-    host: host,
-    apiKey: apiKey
-  })
-}
-
-const kmAudit = sdk?.auditInstance()
 
 async function fetchMergeInformation() {
   const docsRef = file.docsRef
@@ -78,7 +62,7 @@ async function fetchMergeInformation() {
       })
     })
   }else if (documents && !docsRef) {
-    const searchInstance = sdk?.search()
+    const searchInstance = sdk.value.search()
     for (const doc of documents){
         const docInfo = await searchInstance.getDocSignature(doc.docId)
         let matchedResult = {
@@ -99,78 +83,37 @@ async function setStatus(state: string) {
     status.value = state
     switch (type) {
         case "conflict":
-            await setConflictState(file.id, state.toLowerCase())
+            await anomalyStore.setConflictState(file.id, state.toLowerCase())
             break;
         case "duplicate":
-            await setDuplicateState(file.id, state.toLowerCase())
+            await anomalyStore.setDuplicateState(file.id, state.toLowerCase())
             break;
     }
 }
 
 async function goTo(file: any) {
 
-  if (file.url.indexOf("/api/orchestrator/files/download") != -1) {
-
-    let hostUrl = import.meta.env.VITE_HOST_URL
-    let baseUrl = ""
-    let headers = {}
-
-    if (hostUrl) {
-      baseUrl = import.meta.env.VITE_HOST_URL
-      headers = {
-        'Content-Type': 'application/json',
-      }
-
-    } else if (credentials && credentials.organizationId && credentials.instanceId) {
-      baseUrl = `https://${credentials.organizationId}.kai-studio.ai/${credentials.instanceId}`
-      headers = {
-        'organization-id': credentials.organizationId,
-        'instance-id': credentials.instanceId,
-        'api-key': credentials.apiKey
-      }
-    }
-
-    if (!baseUrl) {
+if (file.url.indexOf("/api/orchestrator/files/download") != -1) {
+  if (!sdk.value) {
       return
-    }
-
-    const result = await axios({
-      url: `${baseUrl}` + file.url,
-      method: 'POST',
-      headers: headers
-    })
-
-    if (result && result.data) {
-      const buffer = Buffer.from(result.data.response);
-      const blob = new Blob([buffer]);
-      const url = window.URL.createObjectURL(blob);
-      let a = document.createElement("a");
-      document.body.appendChild(a);
-      a.setAttribute('style', "display: none")
-      a.href = url;
-      a.download = file.name;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    }
-  } else {
-    window.open(file.url, '_blank')
   }
+  const result = await sdk.value.fileInstance().downloadFile(file.name)
+
+  if (result && result.data) {
+    const buffer = Buffer.from(result);
+    const blob = new Blob([buffer]);
+    const url = window.URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    document.body.appendChild(a);
+    a.setAttribute('style', "display: none")
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+} else {
+  window.open(file.url, '_blank')
 }
-
-async function setConflictState(documentId: string, state: string) {
-  if (!sdk) {
-    return
-  }
-  await kmAudit.conflictInformationSetState(documentId, state)
-  file.state = state
-}
-
-async function setDuplicateState(documentId: number, state: string) {
-  if (!sdk) {
-    return
-  }
-  await kmAudit.duplicatedInformationSetState(documentId, state)
-  file.state = state
 }
 
 function downloadAll() {
@@ -207,7 +150,7 @@ onMounted(async () => {
         width: 140px;
     }
     .select-box {
-        width: 178px;
+        width: 164px;
         padding-left: 14px;
         margin-bottom: 7px;
         p {

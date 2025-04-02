@@ -1,5 +1,5 @@
 <template lang="pug">
-  .document-list(v-if="documentList.length")
+  .document-list(v-if="documentsToManageList.length")
     table.files
       thead
         tr
@@ -13,7 +13,7 @@
                 p.text-medium-14.text-grey Duplicates number
                 img(:src="dropdown" v-if="orderType == 'count_duplicates'" :class="orderDirection == 'asc' ? 'inversed': ''")
       tbody
-        tr(v-for="(file, index) in documentList" :key="file.name")
+        tr(v-for="(file, index) in documentsToManageList" :key="file.name")
           td.name-td(width=576)
             p.text-white.text-regular-14(@click="showFileAnomalies(file)") {{ file.name }}
           td.conflict(width=300)
@@ -21,7 +21,7 @@
           td.duplicate(width=300)
             p.text-white.text-regular-14 {{ file.count_duplicates }}
           td.download(width=50)
-            img(src="kai-asset/download.svg" @click="goTo(file)")
+            img(src="kai-asset/share.svg" @click="goTo(file)")
 
     .modal-container(v-if="showModal")
         .modal-bg(@click="closeModal()")
@@ -31,10 +31,10 @@
             template(#body)
                 .conflicts(v-if="anomalies && anomalies['conflicts'].length>0")
                     p.text-white.text-bold-16.title Document Conflicts 
-                    document-card.document-card(v-for="document of anomalies['conflicts']" :document="document" :key="document.id" :type="'conflict'" :credentials="credentials")
+                    document-card.document-card(v-for="document of anomalies['conflicts']" :document="document" :key="document.id" :type="'conflict'")
                 .duplicates(v-if="anomalies && anomalies['duplicated'].length>0")
                     p.text-white.text-bold-16.title Document Duplicates
-                    document-card.document-card(v-for="document of anomalies['duplicated']" :document="document" :key="document.id" :type="'duplicate'" :credentials="credentials")
+                    document-card.document-card(v-for="document of anomalies['duplicated']" :document="document" :key="document.id" :type="'duplicate'")
 
 </template>
 
@@ -47,9 +47,12 @@ import { onMounted, ref } from "vue"
 import {KaiStudio} from "sdk-js";
 import DocumentCard from "./DocumentCard.vue"
 
-const pros = defineProps(['documentList', 'credentials'])
-const documentList = pros.documentList
-const credentials = pros.credentials
+import { useAnomalyStore } from '@/store/anomaly';
+import {storeToRefs} from 'pinia';
+
+const anomalyStore = useAnomalyStore();
+
+const {documentsToManageList, sdk} = storeToRefs(anomalyStore);
 
 const orderType = ref('count_conflicts')
 const orderDirection = ref('asc')
@@ -58,10 +61,9 @@ const showModal = ref(false)
 const modalFileId = ref('')
 const anomalies = ref({})
 
-const sdk: any = ref(null)
 
 async function showFileAnomalies(file: any) {
-    if (!sdk.value) {
+    if (!sdk.value) { 
         return
     }
     anomalies.value = await sdk.value.auditInstance().getAnomaliesForDoc(file.id)
@@ -76,7 +78,7 @@ function orderby(type: string) {
         orderDirection.value = orderDirection.value == 'asc' ? 'desc' : 'asc'
     }
     orderType.value = type
-    documentList.sort((a: any, b: any) => {
+    documentsToManageList.value.sort((a: any, b: any) => {
         if (orderDirection.value == 'asc') {
             return a[type] - b[type]
         } else {
@@ -117,20 +119,7 @@ async function goTo(file: any) {
 }
 
 onMounted(() => {
-    if (credentials.organizationId && credentials.instanceId && credentials.apiKey) {
-        sdk.value = new KaiStudio({
-            organizationId: credentials.organizationId,
-            instanceId: credentials.instanceId,
-            apiKey: credentials.apiKey
-        })
-    } else if (credentials.host && credentials.apiKey) {
-        sdk.value = new KaiStudio({
-            host: credentials.host,
-            apiKey: credentials.apiKey
-        })
-    }
     orderby('count_conflicts')
-
 })
 </script>
 
@@ -176,9 +165,6 @@ onMounted(() => {
         }
         &.download {
           cursor: pointer;
-          img {
-            filter: var(--svg-filter-white-color);
-          }
         }
       }
     }

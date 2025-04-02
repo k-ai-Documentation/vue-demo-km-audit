@@ -17,8 +17,6 @@ const toggle: Ref<boolean> = ref(false)
 
 .dropdown-select {
   position: relative;
-  z-index: 2000;
-
   .trigger {
     display: flex;
     align-items: center;
@@ -30,8 +28,7 @@ const toggle: Ref<boolean> = ref(false)
     border-top: 1px solid transparent;
     border-right: 1px solid transparent;
     border-left: 1px solid transparent;
-    padding-right: 14px;
-
+    z-index: 2000;
     img {
       filter: var(--svg-filter-white-color);
     }
@@ -60,6 +57,7 @@ const toggle: Ref<boolean> = ref(false)
       border-right: 1px solid var(--color-border);
       border-left: 1px solid var(--color-border);
       border-bottom: 1px solid var(--color-border);
+      z-index: 4000;
     }
 
     img {
