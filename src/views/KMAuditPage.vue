@@ -1,27 +1,27 @@
 <template lang="pug">
   .km-audit-page
-    Collapse.collapse(:defaultOpen="collapseMenu.documentsToManage")
+    Collapse.collapse(:defaultOpen="collapseMenu.documentsToManage" @toggle="toggleCollapseMenu('documentsToManage')")
         template(v-slot:title)
-          p.text-white.text-medium-16(@click="collapseMenu.documentsToManage = !collapseMenu.documentsToManage") Documents to manage
+          p.text-white.text-medium-16 Documents to manage
         template(v-slot:body)
             .documents-to-manage(v-if="documentsToManageList && documentsToManageList.length")
                 document-list()
             loader.loader-block(v-if="loadingStates.documentsToManage" color="white" )
-    Collapse.collapse(:defaultOpen="collapseMenu.conflict")
+    Collapse.collapse(:defaultOpen="collapseMenu.conflict" @toggle="toggleCollapseMenu('conflict')")
         template(v-slot:title)
-          p.text-white.text-medium-16(@click="collapseMenu.conflict = !collapseMenu.conflict") Conflicts
+          p.text-white.text-medium-16 Conflicts
         template(v-slot:body)
             related-documents(v-if="conflictDocumentList && conflictDocumentList.length"  :type="'conflict'") 
             loader.loader-block(v-if="loadingStates.conflict" color="white" )
-    Collapse.collapse(:defaultOpen="collapseMenu.duplicate")
+    Collapse.collapse(:defaultOpen="collapseMenu.duplicate" @toggle="toggleCollapseMenu('duplicate')")
         template(v-slot:title)
-          p.text-white.text-medium-16(@click="collapseMenu.duplicate = !collapseMenu.duplicate") Duplicates
+          p.text-white.text-medium-16 Duplicates
         template(v-slot:body)
             related-documents(v-if="duplicatedDocumentList && duplicatedDocumentList.length" :documentList="duplicatedDocumentList" :credentials="credentials" :type="'duplicate'" :sdkAudit="kmAudit")
             loader.loader-block(v-if="loadingStates.duplicate" color="white" )
-    Collapse.collapse(:defaultOpen="collapseMenu.missingSubjects")
+    Collapse.collapse(:defaultOpen="collapseMenu.missingSubjects" @toggle="toggleCollapseMenu('missingSubjects')")
         template(v-slot:title)
-          p.text-white.text-medium-16(@click="collapseMenu.missingSubjects = !collapseMenu.missingSubjects") Missing subjects
+          p.text-white.text-medium-16 Missing subjects
         template(v-slot:body)
             .missing-subjects(v-if="missingSubjects && missingSubjects.length")
                 missing-subject-card(v-for="(element, index) in missingSubjects" :subject="element" :key="index")
@@ -64,7 +64,7 @@ interface Anomaly {
     subject: string;
 }
 const props = defineProps(['credentials']);
-const collapseMenu: Ref<CollapseMenu> = ref({ documentsToManage: true, conflict: false, duplicate: false, missingSubjects: false });
+const collapseMenu: Ref<CollapseMenu> = ref({ documentsToManage: false, conflict: false, duplicate: false, missingSubjects: false });
 
 let credentials = { ...props.credentials };
 
@@ -96,6 +96,10 @@ const conflictDocumentList: ComputedRef<Anomaly[]> = computed(() => {
 const duplicatedDocumentList: ComputedRef<Anomaly[]> = computed(() => {
     return collapseMenu.value.duplicate == true ? duplicatedInformationList.value : [];
 });
+
+function toggleCollapseMenu(type: string) {
+    collapseMenu.value[type as keyof CollapseMenu] = !collapseMenu.value[type as keyof CollapseMenu];
+}
 
 watch(
     () => collapseMenu.value.documentsToManage,
