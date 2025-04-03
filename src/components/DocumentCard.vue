@@ -32,7 +32,7 @@ import {KaiStudio} from "sdk-js";
 import Buffer from "vue-buffer";
 import axios from "axios";
 import DropdownSelect from "./DropdownSelect.vue";
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const props = defineProps(['document', 'type'])

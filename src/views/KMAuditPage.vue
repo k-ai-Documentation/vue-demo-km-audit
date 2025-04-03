@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { computed, type ComputedRef, onMounted, ref, type Ref, watch } from 'vue';
 import {storeToRefs} from 'pinia';
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import DocumentList from './../components/DocumentList.vue';
 import MissingSubjectCard from './../components/MissingSubjectCard.vue';
 import Loader from './../components/Loader.vue';

@@ -47,7 +47,7 @@ import { onMounted, ref } from "vue"
 import {KaiStudio} from "sdk-js";
 import DocumentCard from "./DocumentCard.vue"
 
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();

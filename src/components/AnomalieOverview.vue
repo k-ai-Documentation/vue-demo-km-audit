@@ -36,7 +36,7 @@ import { ref, computed, type ComputedRef } from 'vue';
 import ModalTemplate from './ModalTemplate.vue';
 import DocumentCard from './DocumentCard.vue';
 
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();

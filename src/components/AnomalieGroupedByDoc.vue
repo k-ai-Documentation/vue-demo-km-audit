@@ -39,7 +39,7 @@
 import { ref, computed,onMounted, type ComputedRef, type Ref } from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
 
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();

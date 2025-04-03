@@ -26,7 +26,7 @@ import DropdownSelect from './DropdownSelect.vue';
 import DocumentCard from './DocumentCard.vue';
 import AnomalieOverview from './AnomalieOverview.vue';
 import AnomalieGroupedByDoc from './AnomalieGroupedByDoc.vue';
-import { useAnomalyStore } from '@/store/anomaly';
+import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();
