@@ -166,12 +166,11 @@ function getAnomalyByDocName(docName: string): Anomaly[] {
             top: 100%;
             left: 0;
             width: 100%;
-            background-color: var(--light-black-color);
-            border: 1px solid var(--color-border);
+            background-color: var(--grey-color);
             border-top: none;
             border-radius: 0 0 4px 4px;
             z-index: 1000;
-
+            box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
             p {
                 padding: 8px 12px;
                 cursor: pointer;

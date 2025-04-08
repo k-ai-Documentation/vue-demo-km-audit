@@ -136,6 +136,17 @@ watch(
         height: 32px;
         align-items: center;
         margin-bottom: 20px;
+        .input-container {
+            display: flex;
+            align-items: center;
+            width: 50%;
+            input {
+                width: 80%;
+            }
+            button {
+                margin-left: 10px;
+            }
+        }
         .search-anomalies {
             border-bottom: 1px solid var(--grey-color);
         }
