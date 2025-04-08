@@ -106,7 +106,9 @@ watch(
     async (newVal, oldVal) => {
         loadingStates.value.documentsToManage = true
         if (newVal == true && oldVal == false) {
-            await anomalyStore.getDocumentsToManageList(20, 0);
+            await anomalyStore.getDocumentsToManageList();
+        }else{
+            anomalyStore.resetDocumentsToManage();
         }
         loadingStates.value.documentsToManage = false
     }
@@ -117,7 +119,9 @@ watch(
     async (newVal, oldVal) => {
         loadingStates.value.conflict = true
         if (newVal == true && oldVal == false) {
-            await anomalyStore.getConflictInformation(20, 0);
+            await anomalyStore.getConflictInformation();
+        }else {
+            anomalyStore.resetConflict();
         }
         loadingStates.value.conflict = false
     }
@@ -128,7 +132,9 @@ watch(
     async (newVal, oldVal) => {
         loadingStates.value.duplicate = true
         if (newVal == true && oldVal == false) {
-            await anomalyStore.getDuplicatedInformation(20, 0);
+            await anomalyStore.getDuplicatedInformation();
+        }else {
+            anomalyStore.resetDuplicated();
         }
         loadingStates.value.duplicate = false
     }
@@ -139,7 +145,9 @@ watch(
     async (newVal, oldVal) => {
         loadingStates.value.missingSubjects = true
         if (newVal == true && oldVal == false) {
-            await anomalyStore.getMissingSubjectList(20, 0);
+            await anomalyStore.getMissingSubjectList();
+        }else{
+            anomalyStore.resetMissingSubjects();
         }
         loadingStates.value.missingSubjects = false
     }

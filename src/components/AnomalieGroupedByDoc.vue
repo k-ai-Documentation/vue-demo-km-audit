@@ -1,5 +1,9 @@
 <template lang="pug">
 .anomalie-grouped-by-doc
+    .filter-group
+        input.simple-input-h30(placeholder="filter by document" v-model="filterByDocument" @focus="showSearchList = true")
+        .search-item-list(v-if="filterByDocument && showSearchList")
+            p.text-regular-14.text-white(v-for="document in filteredDocumentsName" :key="document" @click="selectDocument(document)") {{document}}
     .doc-box(v-for="(documentList, index) in Object.values(groupedDocuments)" :key="documentList")
         p.text-bold-16.text-white Two related documents \#{{index + 1}}
         p.text-regular-14.text-white {{documentList[0].docsRef[0].name}}
@@ -36,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed,onMounted, type ComputedRef, type Ref } from 'vue';
+import { ref, computed,onMounted, type ComputedRef, type Ref, watch } from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
 
 import { useAnomalyStore } from './../store/anomaly';
@@ -44,6 +48,9 @@ import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();
 const { conflictInformationList, duplicatedInformationList } = storeToRefs(anomalyStore);
+
+const filterByDocument: Ref<string> = ref('');
+const showSearchList: Ref<boolean> = ref(false);
 
 interface docRef {
     id: string;
@@ -79,8 +86,21 @@ const anomalieStateList = computed(() => {
   }, {} as Record<string, string>);
 });
 
+const filteredDocumentsName = computed(() => {
+  const allDocsRefs = anomalies.flatMap((anomaly) => anomaly.docsRef);
+  const filteredDocsRefs = allDocsRefs.filter((docRef) =>
+    docRef.name.toLowerCase().includes(filterByDocument.value.toLowerCase())
+  );
+  return [...new Set(filteredDocsRefs.flatMap((docRef)=>docRef.name))];
+});
+
+function selectDocument(document: string) {
+    filterByDocument.value = document;
+    showSearchList.value = false;
+}
+
 const groupedDocuments = computed(() => {
-    return anomalies.reduce((acc: Record<string, Anomaly[]>, anomaly: Anomaly) => {
+    const groupedList =  anomalies.reduce((acc: Record<string, Anomaly[]>, anomaly: Anomaly) => {
         const docRefPair = [anomaly.docsRef[0].id, anomaly.docsRef[1].id].sort().join('-');
         if (!acc[docRefPair]) {
             acc[docRefPair] = [];
@@ -91,6 +111,17 @@ const groupedDocuments = computed(() => {
         acc[docRefPair].push(anomaly);
         return acc;
     }, {} as Record<string, Anomaly[]>);
+    //filter by filterByDocument.value
+    if (filterByDocument.value) {
+        return Object.entries(groupedList).filter(([docRefPair, anomalies]) => {
+            return anomalies.some((anomaly) => anomaly.docsRef.some((docRef) => docRef.name.includes(filterByDocument.value)));
+        }).reduce((acc, [docRefPair, anomalies]) => {
+            acc[docRefPair] = anomalies;
+            return acc;
+        }, {} as Record<string, Anomaly[]>);
+    }
+    return groupedList;
+
 });
 
 async function setStatus(anomalyId: string, state: string) {
@@ -111,12 +142,46 @@ function getAnomalyById(anomalyId: string): Anomaly | undefined {
     return anomalies.find((anomaly) => anomaly.id === anomalyId);
 }
 
+function getAnomalyByDocName(docName: string): Anomaly[] {
+    return anomalies.filter((anomaly) => anomaly.docsRef.some((docRef) => docRef.name === docName));
+}
 
 </script>
 
 <style lang="scss" scoped>
 .anomalie-grouped-by-doc {
     width: 100%;
+    .filter-group {
+        position: relative;
+        width: 50%;
+        margin-bottom: 10px;
+        
+        input {
+            width: 100%;
+            border-bottom: 1px solid var(--grey-color);
+        }
+
+        .search-item-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--light-black-color);
+            border: 1px solid var(--color-border);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            z-index: 1000;
+
+            p {
+                padding: 8px 12px;
+                cursor: pointer;
+
+                &:hover {
+                    background-color: var(--grey-4-color);
+                }
+            }
+        }
+    }
     .doc-box {
         border-radius: 10px;
         border: 2px solid var(--color-border);

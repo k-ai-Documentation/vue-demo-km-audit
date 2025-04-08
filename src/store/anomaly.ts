@@ -38,7 +38,9 @@ interface Anomaly {
 
 export const useAnomalyStore = defineStore('anomalyStore', () => {
     const conflictInformationList: Ref<Anomaly[]> = ref([]);
+    const conflictInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const duplicatedInformationList: Ref<Anomaly[]> = ref([]);
+    const duplicatedInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
 
@@ -72,107 +74,144 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             apiKey: apiKey,
             host: host,
         };
-        await getDocumentsToManageList(20, 0);
 
     }
 
-    async function getConflictInformation(limit: number, initialOffset: number) {
+    function resetConflictSearch() {
+        conflictInformationWithSearch.value = [];
+    }
+
+    function resetDuplicatedSearch() {
+        duplicatedInformationWithSearch.value = [];
+    }
+
+    function resetConflict() {
+        conflictInformationList.value = [];
+    }
+
+    function resetDuplicated() {
+        duplicatedInformationList.value = [];
+    }
+
+    function resetDocumentsToManage() {
+        documentsToManageList.value = [];
+    }
+
+    function resetMissingSubjects() {
+        missingSubjects.value = [];
+    }
+
+    async function getConflictInformation(query: string = '', ) {
+        if (!sdk) {
+            return;
+        }
+        if( query != '') {
+            conflictInformationWithSearch.value = [];
+        }
+
+        let offset: number = 0;
+        const limit: number = 20;
+        while (true) {
+            let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query);
+            if (result) {
+                for (let index = 0; index < result.length; index++) {
+                    let document = result[index];
+                    if (document && document.docsRef && document.docsRef.length) {
+                        query == '' ? conflictInformationList.value.push(document) : conflictInformationWithSearch.value.push(document);
+                    }
+                }
+                offset = offset + limit;
+                if (result.length < limit) {
+                    break;
+                }
+            }else {
+                break;
+            }
+        }
+        
+    }
+
+    async function getDuplicatedInformation(query: string = '') {
         if (!sdk) {
             return;
         }
 
-        if (initialOffset == 0) {
-            conflictInformationList.value = [];
+        if( query != '') {
+            duplicatedInformationWithSearch.value = [];
         }
 
-        let offset = initialOffset;
-        let result = await sdk.value.auditInstance().getConflictInformation(20, offset);
-        if (result) {
-            for (let index = 0; index < result.length; index++) {
-                let document = result[index];
-                if (document && document.docsRef && document.docsRef.length) {
-                    conflictInformationList.value.push(document);
+        let offset: number = 0;
+        const limit: number = 20;
+        while (true) {
+            let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query);
+            if (result) {
+                for (let index = 0; index < result.length; index++) {
+                    let document = result[index];
+                    if (document && document.docsRef && document.docsRef.length) {
+                        query == '' ? duplicatedInformationList.value.push(document) : duplicatedInformationWithSearch.value.push(document);
+                    }
                 }
+                offset = offset + limit;
+                if (result.length < limit) {
+                    break;
+                }
+            }else {
+                break;
             }
         }
-        if (result && result.length == limit) {
-            offset = offset + limit;
-            await getConflictInformation(20, offset);
-        }
+
     }
 
-    async function getDuplicatedInformation(limit: number, initialOffset: number) {
+    async function getDocumentsToManageList() {
         if (!sdk) {
             return;
         }
 
-        if (initialOffset == 0) {
-            duplicatedInformationList.value = [];
-        }
-
-        let offset = initialOffset;
-        let result = await sdk.value.auditInstance().getDuplicatedInformation(20, offset);
-        if (result) {
-            for (let index = 0; index < result.length; index++) {
-                let document = result[index];
-                if (document && document.docsRef && document.docsRef.length) {
-                    duplicatedInformationList.value.push(document);
+        let offset: number = 0;
+        const limit: number = 20;
+        while (true) {
+            let result = await sdk.value.auditInstance().getDocumentsToManageList(limit, offset);
+            if (result) {
+                for (let index = 0; index < result.length; index++) {
+                    let document = result[index];
+                    if (document) {
+                        documentsToManageList.value.push(document);
+                    }
                 }
+                offset = offset + limit;
+                if (result.length < limit) {
+                    break;
+                }
+            }else {
+                break;
             }
         }
-        if (result && result.length == limit) {
-            offset = offset + limit;
-            await getDuplicatedInformation(limit, offset);
-        }
+    
     }
 
-    async function getDocumentsToManageList(limit: number, initialOffset: number) {
+    async function getMissingSubjectList() {
         if (!sdk) {
             return;
         }
 
-        if (initialOffset == 0) {
-            documentsToManageList.value = [];
-        }
-
-        let offset = initialOffset;
-        let result = await sdk.value.auditInstance().getDocumentsToManageList(20, offset);
-        if (result) {
-            for (let index = 0; index < result.length; index++) {
-                let document = result[index];
-                if (document) {
-                    documentsToManageList.value.push(document);
+        let offset: number = 0;
+        const limit: number = 20;
+        let result = await sdk.value.auditInstance().getMissingSubjectList(limit, offset);
+        while (true) {
+            if (result) {
+                for (let index = 0; index < result.length; index++) {
+                    let subject = result[index];
+                    if (subject) {
+                        missingSubjects.value.push(subject);
+                    }
                 }
-            }
-        }
-        if (result && result.length == limit) {
-            offset = offset + limit;
-            await getDocumentsToManageList(limit, offset);
-        }
-    }
-
-    async function getMissingSubjectList(limit: number, initialOffset: number) {
-        if (!sdk) {
-            return;
-        }
-
-        if (initialOffset == 0) {
-            missingSubjects.value = [];
-        }
-
-        let offset = initialOffset;
-        let result = await sdk.value.auditInstance().getMissingSubjectList(20, offset);
-        if (result) {
-            for (let index = 0; index < result.length; index++) {
-                let subject = result[index];
-                if (subject) {
-                    missingSubjects.value.push(subject);
+                offset = offset + limit;
+                if (result.length < limit) {
+                    break;
                 }
+            }else {
+                break;
             }
-        }
-        if (result && result.length == limit) {
-            offset = offset + limit;
-            await getMissingSubjectList(limit, offset);
         }
     }
 
@@ -207,7 +246,15 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         missingSubjects,
         credential,
         sdk,
+        conflictInformationWithSearch,
+        duplicatedInformationWithSearch,
         init,
+        resetConflictSearch,
+        resetDuplicatedSearch,
+        resetConflict,
+        resetDuplicated,
+        resetDocumentsToManage,
+        resetMissingSubjects,
         getConflictInformation,
         getDuplicatedInformation,
         getDocumentsToManageList,

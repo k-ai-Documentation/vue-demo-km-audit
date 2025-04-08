@@ -8,29 +8,32 @@
         AnomalieOverview(:type="props.type")
     .one-by-one(v-if="menu == 'oneByOne'")
         .top
-            DropdownSelect.filter(v-if="typeList && (conflictInformationList.length || duplicatedInformationList.length)")
+            .input-container
+                input.simple-input-h30.search-anomalies(type="text" :placeholder="`Search anything in ${props.type}...`" @keyup.enter="searchAnomalies" v-model="subjectToSearch")
+                button.btn-outline-rounded-30(@click="searchAnomalies") Search
+            DropdownSelect.filter(v-if="typeList && (conflictInformationList.length || duplicatedInformationList.length || conflictInformationWithSearch.length || duplicatedInformationWithSearch.length)")
                 template(#trigger)
                     div.selected-type
                         p.text-regular-14.text-white {{ selectedType }}
                 template(#body)
                     .document-type
                         p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
-        document-card.document-card(v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + element.status" :type="props.type" :credentials="credentials")
+        document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
     .grouped(v-if="menu == 'grouped'")
         anomalie-grouped-by-doc(:type="props.type")
 </template>
 
 <script setup lang="ts">
-import { computed, type ComputedRef, onMounted, ref, type Ref, watch } from 'vue';
+import { computed, type ComputedRef, ref, type Ref, watch } from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
 import DocumentCard from './DocumentCard.vue';
 import AnomalieOverview from './AnomalieOverview.vue';
 import AnomalieGroupedByDoc from './AnomalieGroupedByDoc.vue';
 import { useAnomalyStore } from './../store/anomaly';
-import {storeToRefs} from 'pinia';
+import { storeToRefs } from 'pinia';
 
 const anomalyStore = useAnomalyStore();
-const { conflictInformationList, duplicatedInformationList } = storeToRefs(anomalyStore);
+const { conflictInformationList, duplicatedInformationList, conflictInformationWithSearch, duplicatedInformationWithSearch } = storeToRefs(anomalyStore);
 
 interface Anomaly {
     docsRef: any[];
@@ -50,19 +53,53 @@ const selectedType: Ref<string> = ref('All');
 
 const menu: Ref<string> = ref('overview');
 
+const subjectToSearch: Ref<string> = ref('');
+const searchApplied: Ref<boolean> = ref(false);
+
 const otherTypes: ComputedRef<string[]> = computed(() => {
     return typeList.value.filter((t: string) => t != selectedType.value);
 });
-
 const documentsToShow = computed(() => {
-    if (selectedType.value == 'All') {
-        return props.type == 'conflict' ? conflictInformationList.value : duplicatedInformationList.value ;
+    const documents =
+        props.type === 'conflict'
+            ? searchApplied.value
+                ? [...conflictInformationWithSearch.value]
+                : [...conflictInformationList.value]
+            : searchApplied.value
+                ? [...duplicatedInformationWithSearch.value]
+                : [...duplicatedInformationList.value];
+
+    if (selectedType.value === 'All') {
+        return documents;
     }
-    const documents = props.type == 'conflict' ? conflictInformationList.value : duplicatedInformationList.value ;
-    return documents.filter((document: any) => {
-        return document.state == selectedType.value.toUpperCase();
-    });
+
+    return documents.filter((document: any) => document.state === selectedType.value.toUpperCase());
 });
+
+function searchAnomalies() {
+    if (subjectToSearch.value.trim() !== '') {
+        searchApplied.value = true;  
+        if (props.type == 'conflict') {
+            anomalyStore.getConflictInformation(subjectToSearch.value);
+        } else {
+            anomalyStore.getDuplicatedInformation(subjectToSearch.value);
+        }
+    }
+}
+
+watch(
+    () => subjectToSearch.value,
+    (newVal, oldVal) => {
+        if (newVal == '') {
+            searchApplied.value = false;  
+            if (props.type == 'conflict') {
+                anomalyStore.resetConflictSearch();
+            } else {
+                anomalyStore.resetDuplicatedSearch();
+            }
+        }
+    }
+);
 </script>
 
 <style scoped lang="scss">
@@ -94,11 +131,14 @@ const documentsToShow = computed(() => {
     }
     .top {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         width: calc(100% - 200px);
         height: 32px;
         align-items: center;
         margin-bottom: 20px;
+        .search-anomalies {
+            border-bottom: 1px solid var(--grey-color);
+        }
     }
 
     .filter {
