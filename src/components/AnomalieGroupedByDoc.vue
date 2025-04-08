@@ -1,7 +1,7 @@
 <template lang="pug">
 .anomalie-grouped-by-doc
     .filter-group
-        input.simple-input-h30(placeholder="filter by document" v-model="filterByDocument" @focus="showSearchList = true")
+        input.simple-input-h30(placeholder="Filter by document name" v-model="filterByDocument" @focus="showSearchList = true")
         .search-item-list(v-if="filterByDocument && showSearchList")
             p.text-regular-14.text-white(v-for="document in filteredDocumentsName" :key="document" @click="selectDocument(document)") {{document}}
     .doc-box(v-for="(documentList, index) in Object.values(groupedDocuments)" :key="documentList")
