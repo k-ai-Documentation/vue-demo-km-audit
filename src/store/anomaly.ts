@@ -75,6 +75,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             host: host,
         };
 
+        //reset all
+        resetConflict();
+        resetDuplicated();
+        resetConflictSearch();
+        resetDuplicatedSearch();
+        resetDocumentsToManage();
+        resetMissingSubjects();
     }
 
     function resetConflictSearch() {
@@ -196,8 +203,8 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
         let offset: number = 0;
         const limit: number = 20;
-        let result = await sdk.value.auditInstance().getMissingSubjectList(limit, offset);
         while (true) {
+            let result = await sdk.value.auditInstance().getMissingSubjectList(limit, offset);
             if (result) {
                 for (let index = 0; index < result.length; index++) {
                     let subject = result[index];
