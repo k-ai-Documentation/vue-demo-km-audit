@@ -25,7 +25,6 @@
                 p.text-white.text-bold-16 {{type.charAt(0).toUpperCase() + type.slice(1)}} documents
             template(#body)
                 .docs(v-if="filterdAnomalies && filterdAnomalies.length > 0")
-                    p.text-white.text-bold-16.title Document Conflicts 
                     document-card.document-card(v-for="document of filterdAnomalies" :document="document" :key="document.id" :type="props.type")
 
 
@@ -136,7 +135,7 @@ function closeModal() {
 
         .modal {
             z-index: 3502;
-            max-height: 100%;
+            max-height: 80%;
             height: fit-content;
             vertical-align: middle;
             background-color: var(--color-border);
