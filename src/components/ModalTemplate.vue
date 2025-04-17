@@ -27,7 +27,6 @@
             padding-left: 24px;
             padding-right: 24px;
             filter: var(--svg-filter-white-color);
-            height: 50.5px;
             img {
                 cursor: pointer;
             }

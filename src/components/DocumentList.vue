@@ -194,8 +194,9 @@ onMounted(() => {
 
   .modal {
     z-index: 3502;
-    height: 80%;
+    max-height: 80%;
     background-color: var(--color-border);
+    overflow-y: scroll;
     .title{
         margin-bottom: 15px;
         padding-left: 20px;
