@@ -62,9 +62,9 @@ async function fetchMergeInformation() {
       })
     })
   }else if (documents && !docsRef) {
-    const searchInstance = sdk.value.search()
+    const coreInstance = sdk.value.core()
     for (const doc of documents){
-        const docInfo = await searchInstance.getDocSignature(doc.docId)
+        const docInfo = await coreInstance.getDocSignature(doc.docId)
         let matchedResult = {
             name: docInfo.name,
             url: docInfo.url,
