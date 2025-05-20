@@ -25,13 +25,13 @@
                     tr(v-for="anomaly in documentList" :key="anomaly.id")
                         td.text-regular-14.text-white.subject {{anomaly.subject}}
                         td.state
-                            p.text-white.text-medium-14(v-if="anomaly.state == 'MANAGED' || anomalieStateList[anomaly.id] == 'MANAGED' || anomalieStateList[anomaly.id] == 'IGNORED' || anomaly.state == 'IGNORED'"  ) {{anomalieStateList[anomaly.id]}}
+                            p.text-white.text-medium-14(v-if="anomaly.state == 'DISAPPEARED'") {{anomalieStateList[anomaly.id]}}
                             DropdownSelect(v-else)
                                 template(#trigger)
                                     .trigger
                                         p.text-white.text-medium-14 {{anomaly.state}}
                                 template(#body)
-                                    .select-box(v-for="state in stateList" :key="state")
+                                    .select-box(v-for="state in getAvailableStateList(anomaly)" :key="state")
                                         p.text-white.text-medium-14( @click="setStatus(anomaly.id, state)"  v-if="state != anomalieStateList[anomaly.id]") {{state}}
                         td.text-regular-14.text-white.info {{anomaly.documents[0].information_involved}}
                         td.text-regular-14.text-white.info {{anomaly.documents[1].information_involved}}
@@ -77,7 +77,25 @@ const props = defineProps<{
 
 const anomalies = props.type == 'conflict' ? conflictInformationList.value : duplicatedInformationList.value;
 
-const stateList: Ref<string[]> = ref(['DETECTED', 'MANAGED', 'IGNORED']);
+const stateList: Ref<string[]> = ref(["DETECTED", "MANAGED", "IGNORED", "DISAPPEARED", "REDETECTED"])
+
+const getAvailableStateList = (anomaly: Anomaly): string[] => {
+    if (!anomaly) return [];
+
+    if(anomaly.state === 'MANAGED' ) {
+        return ["DETECTED", "IGNORED"]
+    }
+    if(anomaly.state === 'DETECTED' ) {
+        return ["MANAGED", "IGNORED"]
+    }
+    if(anomaly.state === 'IGNORED' ) {
+        return ["DETECTED", "MANAGED"]
+    }
+    if(anomaly.state === 'REDETECTED' ) {
+        return ["MANAGED", "IGNORED"]
+    }
+    return [];
+};
 
 const anomalieStateList = computed(() => {
   return anomalies.reduce((acc: Record<string, string>, anomaly: Anomaly) => {
@@ -125,9 +143,6 @@ const groupedDocuments = computed(() => {
 });
 
 async function setStatus(anomalyId: string, state: string) {
-    if (getAnomalyById(anomalyId)?.state == 'MANAGED' || anomalieStateList.value[anomalyId] == 'MANAGED') {
-        return;
-    }
     switch (props.type) {
         case 'conflict':
             await anomalyStore.setConflictState(anomalyId, state.toLowerCase());

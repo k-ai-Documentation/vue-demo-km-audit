@@ -44,6 +44,11 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
 
+    const managedIds = ref<string[]>(((): string[] => {
+        const saved = localStorage.getItem('managedIds');
+        return saved ? JSON.parse(saved) : [];
+    })());
+
     const credential: Ref<Credentail> = ref({
         organizationId: undefined,
         instanceId: undefined,
@@ -222,6 +227,23 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         }
     }
 
+    function updateManagedIds(id: string, state: string) {
+        const isManaged = state.toUpperCase() === 'MANAGED';
+        const ids = managedIds.value;
+        
+        if (isManaged && !ids.includes(id)) {
+            ids.push(id);
+        } else if (!isManaged) {
+            const index = ids.indexOf(id);
+            if (index > -1) {
+                ids.splice(index, 1);
+            }
+        }
+        
+        managedIds.value = ids;
+        localStorage.setItem('managedIds', JSON.stringify(ids));
+    }
+
     async function setConflictState(conflictId: string, state: string) {
         if (!sdk) {
           return
@@ -230,6 +252,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         conflictInformationList.value.forEach((item) => {
           if (item.id == conflictId){
             item.state = state.toUpperCase()
+            updateManagedIds(conflictId, state);
           }
         })
       }
@@ -242,6 +265,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         duplicatedInformationList.value.forEach((item) => {
           if (item.id == duplicateId){
             item.state = state.toUpperCase()
+            updateManagedIds(duplicateId, state);
           }
         })
       }
@@ -255,6 +279,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         sdk,
         conflictInformationWithSearch,
         duplicatedInformationWithSearch,
+        managedIds,
         init,
         resetConflictSearch,
         resetDuplicatedSearch,

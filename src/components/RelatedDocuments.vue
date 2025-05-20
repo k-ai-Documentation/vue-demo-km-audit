@@ -47,7 +47,7 @@ const props = defineProps<{
     type: string;
 }>();
 
-const typeList: Ref<string[]> = ref(['All', 'Managed', 'Detected', 'Ignored']);
+const typeList: Ref<string[]> = ref(['All', 'Managed', 'Detected', 'Ignored', 'Redetected', 'Disappeared']);
 
 const selectedType: Ref<string> = ref('All');
 
