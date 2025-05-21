@@ -36,6 +36,10 @@ interface Anomaly {
     subject: string;
 }
 
+interface ManagedIdsStorage {
+    [key: string]: string[];
+}
+
 export const useAnomalyStore = defineStore('anomalyStore', () => {
     const conflictInformationList: Ref<Anomaly[]> = ref([]);
     const conflictInformationWithSearch: Ref<Anomaly[]> = ref([]);
@@ -43,11 +47,14 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
     const duplicatedInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
+    const instaceId: Ref<string> = ref('');
 
-    const managedIds = ref<string[]>(((): string[] => {
-        const saved = localStorage.getItem('managedIds');
-        return saved ? JSON.parse(saved) : [];
-    })());
+    const managedIds = ref<ManagedIdsStorage>(
+        ((): ManagedIdsStorage => {
+            const saved = localStorage.getItem('managedIds');
+            return saved ? JSON.parse(saved) : {};
+        })()
+    );
 
     const credential: Ref<Credentail> = ref({
         organizationId: undefined,
@@ -57,7 +64,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
     });
 
     let sdk: any = ref(null);
-    
 
     async function init(organizationId?: string, instanceId?: string, apiKey?: string, host?: string) {
         if (organizationId && instanceId && apiKey) {
@@ -66,11 +72,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 instanceId: instanceId,
                 apiKey: apiKey,
             });
+            instaceId.value = instanceId;
         } else if (host) {
             sdk.value = new KaiStudio({
                 host: host,
                 apiKey: apiKey,
             });
+            instaceId.value = host
         }
 
         credential.value = {
@@ -113,11 +121,11 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         missingSubjects.value = [];
     }
 
-    async function getConflictInformation(query: string = '', ) {
+    async function getConflictInformation(query: string = '') {
         if (!sdk) {
             return;
         }
-        if( query != '') {
+        if (query != '') {
             conflictInformationWithSearch.value = [];
         }
 
@@ -136,11 +144,10 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 if (result.length < limit) {
                     break;
                 }
-            }else {
+            } else {
                 break;
             }
         }
-        
     }
 
     async function getDuplicatedInformation(query: string = '') {
@@ -148,7 +155,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             return;
         }
 
-        if( query != '') {
+        if (query != '') {
             duplicatedInformationWithSearch.value = [];
         }
 
@@ -167,11 +174,10 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 if (result.length < limit) {
                     break;
                 }
-            }else {
+            } else {
                 break;
             }
         }
-
     }
 
     async function getDocumentsToManageList() {
@@ -194,11 +200,10 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 if (result.length < limit) {
                     break;
                 }
-            }else {
+            } else {
                 break;
             }
         }
-    
     }
 
     async function getMissingSubjectList() {
@@ -221,16 +226,23 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 if (result.length < limit) {
                     break;
                 }
-            }else {
+            } else {
                 break;
             }
         }
     }
-
+    
     function updateManagedIds(id: string, state: string) {
         const isManaged = state.toUpperCase() === 'MANAGED';
-        const ids = managedIds.value;
-        
+        if (!instaceId.value) return;
+
+        // Initialize array for instance if it doesn't exist
+        if (!managedIds.value[instaceId.value]) {
+            managedIds.value[instaceId.value] = [];
+        }
+
+        const ids = managedIds.value[instaceId.value];
+
         if (isManaged && !ids.includes(id)) {
             ids.push(id);
         } else if (!isManaged) {
@@ -239,36 +251,37 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 ids.splice(index, 1);
             }
         }
-        
-        managedIds.value = ids;
-        localStorage.setItem('managedIds', JSON.stringify(ids));
+
+        // Update the store and localStorage
+        managedIds.value[instaceId.value] = ids;
+        localStorage.setItem('managedIds', JSON.stringify(managedIds.value));
     }
 
     async function setConflictState(conflictId: string, state: string) {
         if (!sdk) {
-          return
+            return;
         }
-        await sdk.value.auditInstance().conflictInformationSetState(conflictId, state)
+        await sdk.value.auditInstance().conflictInformationSetState(conflictId, state);
         conflictInformationList.value.forEach((item) => {
-          if (item.id == conflictId){
-            item.state = state.toUpperCase()
-            updateManagedIds(conflictId, state);
-          }
-        })
-      }
-      
-      async function setDuplicateState(duplicateId: string, state: string) {
+            if (item.id == conflictId) {
+                item.state = state.toUpperCase();
+                updateManagedIds(conflictId, state);
+            }
+        });
+    }
+
+    async function setDuplicateState(duplicateId: string, state: string) {
         if (!sdk) {
-          return
+            return;
         }
-        await sdk.value.auditInstance().duplicatedInformationSetState(duplicateId, state)
+        await sdk.value.auditInstance().duplicatedInformationSetState(duplicateId, state);
         duplicatedInformationList.value.forEach((item) => {
-          if (item.id == duplicateId){
-            item.state = state.toUpperCase()
-            updateManagedIds(duplicateId, state);
-          }
-        })
-      }
+            if (item.id == duplicateId) {
+                item.state = state.toUpperCase();
+                updateManagedIds(duplicateId, state);
+            }
+        });
+    }
 
     return {
         conflictInformationList,
@@ -292,6 +305,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         getDocumentsToManageList,
         getMissingSubjectList,
         setConflictState,
-        setDuplicateState
+        setDuplicateState,
     };
 });
