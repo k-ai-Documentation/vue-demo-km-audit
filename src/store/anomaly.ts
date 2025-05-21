@@ -257,6 +257,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         localStorage.setItem('managedIds', JSON.stringify(managedIds.value));
     }
 
+    function setManagedIdsByLocalStorage() {
+        const storedIds = localStorage.getItem('managedIds');
+        if (storedIds) {
+            managedIds.value = JSON.parse(storedIds);
+        }
+    }
+
     async function setConflictState(conflictId: string, state: string) {
         if (!sdk) {
             return;
@@ -306,5 +313,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         getMissingSubjectList,
         setConflictState,
         setDuplicateState,
+        setManagedIdsByLocalStorage
     };
 });
