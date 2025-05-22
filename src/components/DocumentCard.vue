@@ -174,9 +174,6 @@ onMounted(async () => {
             &:first-child {
                 margin-top: 7px;
             }
-            &:last-child {
-                margin-bottom: 0;
-            }
         }
     }
     .explanation {
