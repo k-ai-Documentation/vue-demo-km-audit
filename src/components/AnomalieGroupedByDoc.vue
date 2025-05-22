@@ -5,9 +5,9 @@
         .search-item-list(v-if="filterByDocument && showSearchList")
             p.text-regular-14.text-white(v-for="document in filteredDocumentsName" :key="document" @click="selectDocument(document)") {{document}}
     .doc-box(v-for="(documentList, index) in Object.values(groupedDocuments)" :key="documentList")
-        p.text-bold-16.text-white(@click="downloadAllDocs(documentList[0])") Two related documents \#{{index + 1}}
-        p.text-regular-14.text-white(@click="goTo(documentList[0].docsRef[0])") {{documentList[0].docsRef[0].name}}
-        p.text-regular-14.text-white(@click="goTo(documentList[0].docsRef[1])") {{documentList[0].docsRef[1].name}}
+        p.text-bold-16.text-white.open-doc(@click="downloadAllDocs(documentList[0])") Two related documents \#{{index + 1}}
+        p.text-regular-14.text-white.open-doc(@click="goTo(documentList[0].docsRef[0])") {{documentList[0].docsRef[0].name}}
+        p.text-regular-14.text-white.open-doc(@click="goTo(documentList[0].docsRef[1])") {{documentList[0].docsRef[1].name}}
         .anomalies-table
             table
                 thead
@@ -240,7 +240,7 @@ async function goTo(file: any) {
         margin-bottom: 20px;
         background-color: var(--light-black-color);
         overflow: visible;
-        p {
+        .open-doc {
             line-height: 1.6;
             cursor: pointer;
             &:hover {
