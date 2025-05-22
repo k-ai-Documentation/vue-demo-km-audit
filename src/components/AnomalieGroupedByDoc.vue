@@ -5,9 +5,9 @@
         .search-item-list(v-if="filterByDocument && showSearchList")
             p.text-regular-14.text-white(v-for="document in filteredDocumentsName" :key="document" @click="selectDocument(document)") {{document}}
     .doc-box(v-for="(documentList, index) in Object.values(groupedDocuments)" :key="documentList")
-        p.text-bold-16.text-white Two related documents \#{{index + 1}}
-        p.text-regular-14.text-white {{documentList[0].docsRef[0].name}}
-        p.text-regular-14.text-white {{documentList[0].docsRef[1].name}}
+        p.text-bold-16.text-white(@click="downloadAllDocs(documentList[0])") Two related documents \#{{index + 1}}
+        p.text-regular-14.text-white(@click="goTo(documentList[0].docsRef[0])") {{documentList[0].docsRef[0].name}}
+        p.text-regular-14.text-white(@click="goTo(documentList[0].docsRef[1])") {{documentList[0].docsRef[1].name}}
         .anomalies-table
             table
                 thead
@@ -42,12 +42,12 @@
 <script setup lang="ts">
 import { ref, computed,onMounted, type ComputedRef, type Ref, watch } from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
-
+import Buffer from 'vue-buffer';
 import { useAnomalyStore } from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();
-const { conflictInformationList, duplicatedInformationList } = storeToRefs(anomalyStore);
+const { conflictInformationList, duplicatedInformationList,sdk } = storeToRefs(anomalyStore);
 
 const filterByDocument: Ref<string> = ref('');
 const showSearchList: Ref<boolean> = ref(false);
@@ -117,7 +117,7 @@ function selectDocument(document: string) {
     showSearchList.value = false;
 }
 
-const groupedDocuments = computed(() => {
+const groupedDocuments: ComputedRef<Record<string, Anomaly[]>> = computed(() => {
     const groupedList =  anomalies.reduce((acc: Record<string, Anomaly[]>, anomaly: Anomaly) => {
         const docRefPair = [anomaly.docsRef[0].id, anomaly.docsRef[1].id].sort().join('-');
         if (!acc[docRefPair]) {
@@ -161,6 +161,41 @@ function getAnomalyByDocName(docName: string): Anomaly[] {
     return anomalies.filter((anomaly) => anomaly.docsRef.some((docRef) => docRef.name === docName));
 }
 
+async function downloadAllDocs(documentList: Anomaly) {
+    for (const el of documentList.docsRef) {
+        try {
+            await goTo(el);
+        } catch (error) {
+            console.error('Error downloading file:', el.name, error);
+        }
+    }
+}
+
+
+async function goTo(file: any) {
+    if (file.url.indexOf('/api/orchestrator/files/download') != -1) {
+        if (!sdk.value) {
+            return;
+        }
+        const result = await sdk.value.fileInstance().downloadFile(file.name);
+
+        if (result && result.data) {
+            const buffer = Buffer.from(result);
+            const blob = new Blob([buffer]);
+            const url = window.URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            document.body.appendChild(a);
+            a.setAttribute('style', 'display: none');
+            a.href = url;
+            a.download = file.name;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    } else {
+        window.open(file.url, '_blank');
+    }
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -174,6 +209,8 @@ function getAnomalyByDocName(docName: string): Anomaly[] {
         input {
             width: 100%;
             border-bottom: 1px solid var(--grey-color);
+            border-bottom-left-radius: 0px;
+            border-bottom-right-radius: 0px;
         }
 
         .search-item-list {
@@ -203,6 +240,13 @@ function getAnomalyByDocName(docName: string): Anomaly[] {
         margin-bottom: 20px;
         background-color: var(--light-black-color);
         overflow: visible;
+        p {
+            line-height: 1.6;
+            cursor: pointer;
+            &:hover {
+                color: var(--primary-color);
+            }
+        }
         .anomalies-table {
             margin-top: 20px;
             width: 100%;
