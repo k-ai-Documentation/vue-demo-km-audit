@@ -91,13 +91,13 @@ async function fetchMergeInformation() {
     informationMerge.value = toReturn;
 }
 
-async function setStatus(state: string) {
+function setStatus(state: string) {
     switch (type) {
         case 'conflict':
-            await anomalyStore.setConflictState(file.id, state.toLowerCase());
+            anomalyStore.setConflictState(file.id, state.toLowerCase());
             break;
         case 'duplicate':
-            await anomalyStore.setDuplicateState(file.id, state.toLowerCase());
+            anomalyStore.setDuplicateState(file.id, state.toLowerCase());
             break;
     }
 }
@@ -136,8 +136,8 @@ async function downloadAll() {
     }
 }
 
-onMounted(async () => {
-    await fetchMergeInformation();
+onMounted( () => {
+    fetchMergeInformation();
 });
 </script>
 

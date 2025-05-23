@@ -142,13 +142,13 @@ const groupedDocuments: ComputedRef<Record<string, Anomaly[]>> = computed(() => 
 
 });
 
-async function setStatus(anomalyId: string, state: string) {
+function setStatus(anomalyId: string, state: string) {
     switch (props.type) {
         case 'conflict':
-            await anomalyStore.setConflictState(anomalyId, state.toLowerCase());
+            anomalyStore.setConflictState(anomalyId, state.toLowerCase());
             break;
         case 'duplicate':
-            await anomalyStore.setDuplicateState(anomalyId, state.toLowerCase());
+            anomalyStore.setDuplicateState(anomalyId, state.toLowerCase());
             break;
     }
 }
