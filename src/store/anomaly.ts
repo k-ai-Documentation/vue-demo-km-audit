@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref, type Ref } from 'vue';
-import { KaiStudio } from 'sdk-js';
+import {defineStore} from 'pinia';
+import {ref, type Ref} from 'vue';
+import {KaiStudio} from 'sdk-js';
 
 interface Credentail {
     organizationId: string | undefined;
@@ -22,6 +22,7 @@ interface docRef {
     name: string;
     url: string;
 }
+
 interface Document {
     docId: string;
     information_involved: string;
@@ -47,6 +48,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
     const duplicatedInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
+    const topSubjects: Ref<any[]> = ref([]);
     const instaceId: Ref<string> = ref('');
 
     const managedIds = ref<ManagedIdsStorage>(
@@ -182,28 +184,23 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
     async function getDocumentsToManageList() {
         if (!sdk) {
-            return;
+            return
         }
 
-        let offset: number = 0;
-        const limit: number = 20;
-        while (true) {
-            let result = await sdk.value.auditInstance().getDocumentsToManageList(limit, offset);
-            if (result) {
-                for (let index = 0; index < result.length; index++) {
-                    let document = result[index];
-                    if (document) {
-                        documentsToManageList.value.push(document);
-                    }
-                }
-                offset = offset + limit;
-                if (result.length < limit) {
-                    break;
-                }
-            } else {
-                break;
-            }
+        documentsToManageList.value = []
+        const docList = await sdk.value.auditInstance().getDocumentsToManageList()
+        const docs: any[] = []
+        if (docList) {
+            const docIds: any[] = Object.keys(docList);
+            docIds.forEach(id => {
+                docs.push({
+                    id: id,
+                    count_conflicts: docList[id].count_conflicts,
+                    count_duplicates: docList[id].count_duplicates
+                })
+            })
         }
+        documentsToManageList.value = docs
     }
 
     async function getMissingSubjectList() {
@@ -231,7 +228,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             }
         }
     }
-    
+
     function updateManagedIds(id: string, state: string) {
         const isManaged = state.toUpperCase() === 'MANAGED';
         if (!instaceId.value) return;
@@ -277,6 +274,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         });
     }
 
+    async function getDocument(fileId: string) {
+        if (!sdk) {
+            return false;
+        }
+        return await sdk.value.core().getDocumentById(fileId)
+    }
+
     async function setDuplicateState(duplicateId: string, state: string) {
         if (!sdk) {
             return;
@@ -288,6 +292,18 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 updateManagedIds(duplicateId, state);
             }
         });
+    }
+
+    async function countInformationBySubject(type: string) {
+        if (!sdk) {
+            return [];
+        }
+        if (type == "conflict") {
+            topSubjects.value = await sdk.value.auditInstance().countConflictInformationBySubject();
+        } else {
+            topSubjects.value = await sdk.value.auditInstance().countDuplicatedInformationBySubject();
+        }
+
     }
 
     return {
@@ -313,6 +329,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         getMissingSubjectList,
         setConflictState,
         setDuplicateState,
-        setManagedIdsByLocalStorage
+        setManagedIdsByLocalStorage,
+        getDocument,
+        countInformationBySubject,
+        topSubjects
     };
 });
