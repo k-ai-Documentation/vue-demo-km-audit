@@ -11,15 +11,16 @@
         .input-container
           input.simple-input-h30.search-anomalies(type="text" :placeholder="`Search anything in ${props.type}...`" @keyup.enter="searchAnomalies" v-model="subjectToSearch")
           button.btn-outline-rounded-30(@click="searchAnomalies") Search
-        DropdownSelect.filter(v-if="typeList && (conflictInformationList.length || duplicatedInformationList.length)")
+        DropdownSelect.filter(v-if="typeList")
           template(#trigger)
             div.selected-type
               p.text-regular-14.text-white {{ selectedType }}
           template(#body)
             .document-type
-              p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
+              p.text-white.text-medium-14(v-for="type in otherTypes" @click="loadAnomalyByState(type)") {{ type }}
       .document-list(@scroll="loadMore")
         document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
+      p.notification.text-grey.text-regular-14(v-if="documentsToShow") No result
     .grouped(v-if="menu == 'grouped'")
       anomalie-grouped-by-doc(:type="props.type")
 </template>
@@ -73,14 +74,22 @@ const documentsToShow = computed(() => {
 
 function loadAnomaly() {
   if (props.type == 'conflict') {
-    anomalyStore.getConflictInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value);
+    anomalyStore.getConflictInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value, (selectedType.value.toUpperCase() == "ALL") ? "" : selectedType.value.toUpperCase());
   } else {
-    anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value);
+    anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value, (selectedType.value.toUpperCase() == "ALL") ? "" : selectedType.value.toUpperCase());
+  }
+}
+
+function loadAnomalyByState(type: string)  {
+  if (type != selectedType.value) {
+    selectedType.value = type
+    console.log(type)
+    offsetAnomaly.value = 0
+    loadAnomaly()
   }
 }
 
 function searchAnomalies() {
-  searchApplied.value = true;
   offsetAnomaly.value = 0;
   loadAnomaly()
 }
@@ -190,7 +199,7 @@ onMounted(() => {
 
 
   .document-list {
-    height: 500px;
+    max-height: 500px;
     overflow-y: scroll;
   }
 }

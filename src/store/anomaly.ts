@@ -115,12 +115,16 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         missingSubjects.value = [];
     }
 
-    async function getConflictInformation(limit: number = 20, offset: number = 0, query: string = '') {
+    async function getConflictInformation(limit: number = 20, offset: number = 0, query: string = '', state: string = "") {
         if (!sdk) {
             return;
         }
 
-        let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query);
+        if(offset == 0) {
+            conflictInformationList.value = []
+        }
+
+        let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query, state);
         if (result) {
             for (let index = 0; index < result.length; index++) {
                 let document = result[index];
@@ -131,12 +135,16 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         }
     }
 
-    async function getDuplicatedInformation(limit: number = 20, offset: number = 0, query: string = '') {
+    async function getDuplicatedInformation(limit: number = 20, offset: number = 0, query: string = '', state: string = "") {
         if (!sdk) {
             return;
         }
 
-        let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query);
+        if(offset == 0) {
+            duplicatedInformationList.value = []
+        }
+
+        let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query, state);
         if (result) {
             for (let index = 0; index < result.length; index++) {
                 let document = result[index];
@@ -244,7 +252,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             return false;
         }
         const files: any = await indexedDBManager.getAll('files')
-        if(fileId && files[fileId]) {
+        if (fileId && files[fileId]) {
             return files[fileId]
         } else {
             const file = await sdk.value.core().getDocumentById(fileId)
@@ -283,22 +291,27 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
     }
 
-    async function getAnomaliesDocumentPair(type: string, limit: number = 10, offset: number = 0) {
+    async function getAnomaliesDocumentPair(type: string, limit: number = 10, offset: number = 0, documentName: string = "") {
         if (!sdk) {
             return [];
         }
         let result = []
+        if(offset == 0) {
+            conflictDocIdsList.value = []
+            duplicatedDocIdsList.value = []
+        }
+
         if (loadingDocumentPairs.value) {
             loadingDocumentPairs.value = false
             if (type == "conflict") {
-                result = await sdk.value.auditInstance().getConflictInformationDocumentPair(limit, offset)
+                result = await sdk.value.auditInstance().getConflictInformationDocumentPair(limit, offset, documentName)
                 result.forEach((docPair: any) => {
                     if (conflictDocIdsList.value.indexOf(docPair) == -1) {
                         conflictDocIdsList.value.push(docPair)
                     }
                 })
             } else {
-                result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset)
+                result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset, documentName)
                 result.forEach((docPair: any) => {
                     if (duplicatedDocIdsList.value.indexOf(docPair) == -1) {
                         duplicatedDocIdsList.value.push(docPair)

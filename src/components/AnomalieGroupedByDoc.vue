@@ -1,7 +1,7 @@
 <template lang="pug">
   .anomalie-grouped-by-doc
     .filter-group
-      input.simple-input-h30(placeholder="Filter by document name" v-model="filterByDocument" @focus="showSearchList = true")
+      input.simple-input-h30(placeholder="Filter by document name" v-model="filterByDocument" @focus="showSearchList = true" @keydown.enter="searchByTitle")
       .search-item-list(v-if="filterByDocument && showSearchList")
         p.text-regular-14.text-white(v-for="document in filteredDocumentsName" :key="document" @click="selectDocument(document)") {{document}}
     .doc-anomalies-container(@scroll="loadMore")
@@ -43,8 +43,13 @@ function loadMore(e: any) {
   const isBottom = (el.scrollTop + el.clientHeight + 200 >= el.scrollHeight)
   if (isBottom) {
     offset += limit
-    anomalyStore.getAnomaliesDocumentPair(props.type, limit, offset)
+    anomalyStore.getAnomaliesDocumentPair(props.type, limit, offset, filterByDocument.value)
   }
+}
+
+function searchByTitle() {
+  offset = 0
+  anomalyStore.getAnomaliesDocumentPair(props.type, limit, offset, filterByDocument.value)
 }
 
 onMounted(() => {
