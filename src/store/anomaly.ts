@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia';
 import {ref, type Ref} from 'vue';
 import {KaiStudio} from 'sdk-js';
+import indexedDBManager from "@/lib/IndexedDBManager";
 
 interface Credentail {
     organizationId: string | undefined;
@@ -43,12 +44,13 @@ interface ManagedIdsStorage {
 
 export const useAnomalyStore = defineStore('anomalyStore', () => {
     const conflictInformationList: Ref<Anomaly[]> = ref([]);
-    const conflictInformationWithSearch: Ref<Anomaly[]> = ref([]);
+    const conflictDocIdsList: Ref<any[]> = ref([]);
+    const duplicatedDocIdsList: Ref<any[]> = ref([]);
     const duplicatedInformationList: Ref<Anomaly[]> = ref([]);
-    const duplicatedInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
-    const topSubjects: Ref<{conflict: any[], duplicated: any[]}> = ref({conflict: [], duplicated: []});
+    const loadingDocumentPairs: Ref<boolean> = ref(true);
+    const topSubjects: Ref<{ conflict: any[], duplicated: any[] }> = ref({conflict: [], duplicated: []});
     const instaceId: Ref<string> = ref('');
 
     const managedIds = ref<ManagedIdsStorage>(
@@ -93,18 +95,8 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         //reset all
         resetConflict();
         resetDuplicated();
-        resetConflictSearch();
-        resetDuplicatedSearch();
         resetDocumentsToManage();
         resetMissingSubjects();
-    }
-
-    function resetConflictSearch() {
-        conflictInformationWithSearch.value = [];
-    }
-
-    function resetDuplicatedSearch() {
-        duplicatedInformationWithSearch.value = [];
     }
 
     function resetConflict() {
@@ -127,27 +119,21 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         if (!sdk) {
             return;
         }
-        if (query != '') {
-            conflictInformationWithSearch.value = [];
-        }
+
         let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query);
         if (result) {
             for (let index = 0; index < result.length; index++) {
                 let document = result[index];
                 if (document && document.docsRef && document.docsRef.length) {
-                    query == '' ? conflictInformationList.value.push(document) : conflictInformationWithSearch.value.push(document);
+                    conflictInformationList.value.push(document)
                 }
             }
-        } 
+        }
     }
 
-    async function getDuplicatedInformation(  limit: number = 20, offset: number = 0, query: string = '') {
+    async function getDuplicatedInformation(limit: number = 20, offset: number = 0, query: string = '') {
         if (!sdk) {
             return;
-        }
-
-        if (query != '') {
-            duplicatedInformationWithSearch.value = [];
         }
 
         let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query);
@@ -155,10 +141,10 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             for (let index = 0; index < result.length; index++) {
                 let document = result[index];
                 if (document && document.docsRef && document.docsRef.length) {
-                    query == '' ? duplicatedInformationList.value.push(document) : duplicatedInformationWithSearch.value.push(document);
+                    duplicatedInformationList.value.push(document)
                 }
             }
-        } 
+        }
     }
 
     async function getDocumentsToManageList() {
@@ -167,7 +153,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         }
 
         documentsToManageList.value = []
-        const docList = await sdk.value.auditInstance().getDocumentsToManageList()
+        const docList = await sdk.value.auditInstance().getDocumentIdsToManageList()
         const docs: any[] = []
         if (docList) {
             const docIds: any[] = Object.keys(docList);
@@ -257,7 +243,19 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         if (!sdk) {
             return false;
         }
-        return await sdk.value.core().getDocumentById(fileId)
+        const files: any = await indexedDBManager.getAll('files')
+        if(fileId && files[fileId]) {
+            return files[fileId]
+        } else {
+            const file = await sdk.value.core().getDocumentById(fileId)
+            indexedDBManager.updateData('files', [
+                {
+                    ...file,
+                    id: fileId
+                }
+            ])
+            return file
+        }
     }
 
     async function setDuplicateState(duplicateId: string, state: string) {
@@ -285,6 +283,45 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
     }
 
+    async function getAnomaliesDocumentPair(type: string, limit: number = 10, offset: number = 0) {
+        if (!sdk) {
+            return [];
+        }
+        let result = []
+        if (loadingDocumentPairs.value) {
+            loadingDocumentPairs.value = false
+            if (type == "conflict") {
+                result = await sdk.value.auditInstance().getConflictInformationDocumentPair(limit, offset)
+                result.forEach((docPair: any) => {
+                    if (conflictDocIdsList.value.indexOf(docPair) == -1) {
+                        conflictDocIdsList.value.push(docPair)
+                    }
+                })
+            } else {
+                result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset)
+                result.forEach((docPair: any) => {
+                    if (duplicatedDocIdsList.value.indexOf(docPair) == -1) {
+                        duplicatedDocIdsList.value.push(docPair)
+                    }
+                })
+            }
+            loadingDocumentPairs.value = true
+        }
+    }
+
+    async function getAnomaliesByDocumentIds(docIds: string[], type: string) {
+        if (!sdk) {
+            return [];
+        }
+        let result = []
+        if (type == "conflict") {
+            result = await sdk.value.auditInstance().getConflictInformationByDocuments(docIds)
+        } else {
+            result = await sdk.value.auditInstance().getDuplicateInformationByDocuments(docIds)
+        }
+        return result
+    }
+
     return {
         conflictInformationList,
         duplicatedInformationList,
@@ -292,12 +329,11 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         missingSubjects,
         credential,
         sdk,
-        conflictInformationWithSearch,
-        duplicatedInformationWithSearch,
         managedIds,
+        topSubjects,
+        conflictDocIdsList,
+        duplicatedDocIdsList,
         init,
-        resetConflictSearch,
-        resetDuplicatedSearch,
         resetConflict,
         resetDuplicated,
         resetDocumentsToManage,
@@ -311,6 +347,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         setManagedIdsByLocalStorage,
         getDocument,
         countInformationBySubject,
-        topSubjects
+        getAnomaliesDocumentPair,
+        getAnomaliesByDocumentIds
     };
 });

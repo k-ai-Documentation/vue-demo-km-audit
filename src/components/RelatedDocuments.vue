@@ -1,51 +1,55 @@
 <template lang="pug">
-.related-documents
+  .related-documents
     .tabs
-        p.text-regular-14(:class="{ active: menu == 'overview' }" @click="menu = 'overview'") Overview by subjects
-        p.text-regular-14(:class="{ active: menu == 'oneByOne' }"  @click="menu = 'oneByOne'") {{type.charAt(0).toUpperCase() + type.slice(1)}} one by one
-        p.text-regular-14(:class="{ active: menu == 'grouped' }" @click="menu = 'grouped'") {{type.charAt(0).toUpperCase() + type.slice(1)}} grouped by document
+      p.text-regular-14(:class="{ active: menu == 'overview' }" @click="menu = 'overview'") Overview by subjects
+      p.text-regular-14(:class="{ active: menu == 'oneByOne' }"  @click="menu = 'oneByOne'") {{type.charAt(0).toUpperCase() + type.slice(1)}} one by one
+      p.text-regular-14(:class="{ active: menu == 'grouped' }" @click="menu = 'grouped'") {{type.charAt(0).toUpperCase() + type.slice(1)}} grouped by document
     .overview(v-if="menu == 'overview'")
-        AnomalieOverview(:type="props.type")
+      AnomalieOverview(:type="props.type")
     .one-by-one(v-if="menu == 'oneByOne'")
-        .top
-            .input-container
-                input.simple-input-h30.search-anomalies(type="text" :placeholder="`Search anything in ${props.type}...`" @keyup.enter="searchAnomalies" v-model="subjectToSearch")
-                button.btn-outline-rounded-30(@click="searchAnomalies") Search
-            DropdownSelect.filter(v-if="typeList && (conflictInformationList.length || duplicatedInformationList.length || conflictInformationWithSearch.length || duplicatedInformationWithSearch.length)")
-                template(#trigger)
-                    div.selected-type
-                        p.text-regular-14.text-white {{ selectedType }}
-                template(#body)
-                    .document-type
-                        p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
-        .document-list(@scroll="loadMore")
-            document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
+      .top
+        .input-container
+          input.simple-input-h30.search-anomalies(type="text" :placeholder="`Search anything in ${props.type}...`" @keyup.enter="searchAnomalies" v-model="subjectToSearch")
+          button.btn-outline-rounded-30(@click="searchAnomalies") Search
+        DropdownSelect.filter(v-if="typeList && (conflictInformationList.length || duplicatedInformationList.length)")
+          template(#trigger)
+            div.selected-type
+              p.text-regular-14.text-white {{ selectedType }}
+          template(#body)
+            .document-type
+              p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
+      .document-list(@scroll="loadMore")
+        document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
     .grouped(v-if="menu == 'grouped'")
-        anomalie-grouped-by-doc(:type="props.type")
+      anomalie-grouped-by-doc(:type="props.type")
 </template>
 
 <script setup lang="ts">
-import { computed, type ComputedRef, onMounted, ref, type Ref, watch } from 'vue';
+import {computed, type ComputedRef, onMounted, ref, type Ref} from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
 import DocumentCard from './DocumentCard.vue';
 import AnomalieOverview from './AnomalieOverview.vue';
 import AnomalieGroupedByDoc from './AnomalieGroupedByDoc.vue';
-import { useAnomalyStore } from './../store/anomaly';
-import { storeToRefs } from 'pinia';
+import {useAnomalyStore} from './../store/anomaly';
+import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();
-const { conflictInformationList, duplicatedInformationList, conflictInformationWithSearch, duplicatedInformationWithSearch } = storeToRefs(anomalyStore);
+const {
+  conflictInformationList,
+  duplicatedInformationList
+} = storeToRefs(anomalyStore);
 
 interface Anomaly {
-    docsRef: any[];
-    documents: any[];
-    explanation: string;
-    id: string;
-    state: string;
-    subject: string;
+  docsRef: any[];
+  documents: any[];
+  explanation: string;
+  id: string;
+  state: string;
+  subject: string;
 }
+
 const props = defineProps<{
-    type: string;
+  type: string;
 }>();
 
 const typeList: Ref<string[]> = ref(['All', 'Managed', 'Detected', 'Ignored', 'Redetected', 'Disappeared']);
@@ -57,164 +61,137 @@ const menu: Ref<string> = ref('overview');
 const subjectToSearch: Ref<string> = ref('');
 const searchApplied: Ref<boolean> = ref(false);
 const offsetAnomaly: Ref<number> = ref(0);
-const offsetAnomalySearch: Ref<number> = ref(0);
 const limitPerPage: number = 20;
 
 const otherTypes: ComputedRef<string[]> = computed(() => {
-    return typeList.value.filter((t: string) => t != selectedType.value);
+  return typeList.value.filter((t: string) => t != selectedType.value);
 });
+
 const documentsToShow = computed(() => {
-    const documents =
-        props.type === 'conflict'
-            ? searchApplied.value
-                ? [...conflictInformationWithSearch.value]
-                : [...conflictInformationList.value]
-            : searchApplied.value
-            ? [...duplicatedInformationWithSearch.value]
-            : [...duplicatedInformationList.value];
-
-    if (selectedType.value === 'All') {
-        return documents;
-    }
-
-    return documents.filter((document: any) => document.state === selectedType.value.toUpperCase());
+  return props.type === 'conflict' ? [...conflictInformationList.value] : [...duplicatedInformationList.value]
 });
+
+function loadAnomaly() {
+  if (props.type == 'conflict') {
+    anomalyStore.getConflictInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value);
+  } else {
+    anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomaly.value, subjectToSearch.value);
+  }
+}
 
 function searchAnomalies() {
-    if (subjectToSearch.value.trim() !== '') {
-        searchApplied.value = true;
-        offsetAnomalySearch.value = 0;
-        if (props.type == 'conflict') {
-            anomalyStore.getConflictInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
-        } else {
-            anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
-        }
-    }
+  searchApplied.value = true;
+  offsetAnomaly.value = 0;
+  loadAnomaly()
 }
 
-function loadMore() {
-    if (subjectToSearch.value.trim() !== '') {
-        offsetAnomalySearch.value += 10;
-        if (props.type == 'conflict') {
-            anomalyStore.getConflictInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
-        } else {
-            anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
-        }
-    } else {
-        offsetAnomaly.value += 10;
-        if (props.type == 'conflict') {
-            anomalyStore.getConflictInformation(offsetAnomaly.value, offsetAnomaly.value);
-        } else {
-            anomalyStore.getDuplicatedInformation(offsetAnomaly.value, offsetAnomaly.value);
-        }
-    }
+function loadMore(e: any) {
+  const el = e.target
+  const isBottom = el.scrollTop + el.clientHeight + 100 >= el.scrollHeight
+  if (isBottom) {
+    offsetAnomaly.value += limitPerPage;
+    loadAnomaly()
+  }
 }
-
-watch(
-    () => subjectToSearch.value,
-    (newVal, oldVal) => {
-        if (newVal == '') {
-            searchApplied.value = false;
-            if (props.type == 'conflict') {
-                anomalyStore.resetConflictSearch();
-            } else {
-                anomalyStore.resetDuplicatedSearch();
-            }
-        }
-    }
-);
 
 onMounted(() => {
-    if (props.type == 'conflict') {
-        anomalyStore.getConflictInformation();
-    } else {
-        anomalyStore.getDuplicatedInformation();
-    }
+  loadAnomaly()
 });
 </script>
 
 <style scoped lang="scss">
 .related-documents {
-    .tabs {
-        display: flex;
-        flex-direction: row;
-        margin: 50px 0;
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    margin: 50px 0;
 
-        p {
-            cursor: pointer;
-            margin-right: 40px;
-            border-bottom: 2px solid transparent;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            color: var(--grey-color);
-            padding-bottom: 5px;
+    p {
+      cursor: pointer;
+      margin-right: 40px;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      color: var(--grey-color);
+      padding-bottom: 5px;
 
-            &.active {
-                border-bottom: 2px solid var(--primary-color);
-                color: var(--white-color);
+      &.active {
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--white-color);
 
-                img {
-                    filter: var(--svg-filter-white-color);
-                }
-            }
+        img {
+          filter: var(--svg-filter-white-color);
         }
+      }
     }
-    .top {
-        display: flex;
-        justify-content: space-between;
-        width: calc(100% - 200px);
-        height: 32px;
-        align-items: center;
-        margin-bottom: 20px;
-        .input-container {
-            display: flex;
-            align-items: center;
-            width: 50%;
-            input {
-                width: 80%;
-            }
-            button {
-                margin-left: 10px;
-            }
-        }
-        .search-anomalies {
-            border-bottom: 1px solid var(--grey-color);
-        }
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% - 200px);
+    height: 32px;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .input-container {
+      display: flex;
+      align-items: center;
+      width: 50%;
+
+      input {
+        width: 80%;
+      }
+
+      button {
+        margin-left: 10px;
+      }
     }
 
-    .filter {
-        z-index: 3000;
-
-        .selected-type {
-            width: 140px;
-            padding: 14px 0 14px 14px;
-
-            img {
-                filter: var(--svg-filter-white-color);
-            }
-        }
-
-        .document-type {
-            width: 164px;
-            padding: 0 14px 14px;
-
-            p {
-                margin-bottom: 14px;
-
-                &:first-letter {
-                    text-transform: capitalize;
-                }
-
-                &:last-child {
-                    margin-bottom: 0;
-                }
-
-                &:hover {
-                    color: var(--primary-color);
-                }
-            }
-        }
+    .search-anomalies {
+      border-bottom: 1px solid var(--grey-color);
     }
+  }
+
+  .filter {
+    z-index: 3000;
+
+    .selected-type {
+      width: 140px;
+      padding: 14px 0 14px 14px;
+
+      img {
+        filter: var(--svg-filter-white-color);
+      }
+    }
+
+    .document-type {
+      width: 164px;
+      padding: 0 14px 14px;
+
+      p {
+        margin-bottom: 14px;
+
+        &:first-letter {
+          text-transform: capitalize;
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &:hover {
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+
+  .document-list {
+    height: 500px;
+    overflow-y: scroll;
+  }
 }
 </style>

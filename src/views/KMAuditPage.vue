@@ -13,14 +13,14 @@
         p.text-white.text-medium-16 Conflicts
       template(v-slot:body)
         p.notification.text-grey.text-regular-14(v-if="showNoResult('conflict')") No result
-        related-documents(v-if="topSubjects && topSubjects.conflict.length"  :type="'conflict'")
+        related-documents(v-if="topSubjects && topSubjects.conflict && topSubjects.conflict.length"  :type="'conflict'")
         loader.loader-block(v-if="loadingStates.conflict" color="white" )
     Collapse.collapse(:defaultOpen="collapseMenu.duplicate" @toggle="toggleCollapseMenu('duplicate')")
       template(v-slot:title)
         p.text-white.text-medium-16 Duplicates
       template(v-slot:body)
         p.notification.text-grey.text-regular-14(v-if="showNoResult('duplicate')") No result
-        related-documents(v-if="topSubjects && topSubjects.duplicate.length" :type="'duplicate'")
+        related-documents(v-if="topSubjects && topSubjects.duplicated && topSubjects.duplicated.length" :type="'duplicated'")
         loader.loader-block(v-if="loadingStates.duplicate" color="white" )
     Collapse.collapse(:defaultOpen="collapseMenu.missingSubjects" @toggle="toggleCollapseMenu('missingSubjects')")
       template(v-slot:title)
