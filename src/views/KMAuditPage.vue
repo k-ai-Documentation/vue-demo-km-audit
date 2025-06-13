@@ -13,14 +13,14 @@
         p.text-white.text-medium-16 Conflicts
       template(v-slot:body)
         p.notification.text-grey.text-regular-14(v-if="showNoResult('conflict')") No result
-        related-documents(v-if="conflictDocumentList && conflictDocumentList.length"  :type="'conflict'")
+        related-documents(v-if="topSubjects && topSubjects.conflict.length"  :type="'conflict'")
         loader.loader-block(v-if="loadingStates.conflict" color="white" )
     Collapse.collapse(:defaultOpen="collapseMenu.duplicate" @toggle="toggleCollapseMenu('duplicate')")
       template(v-slot:title)
         p.text-white.text-medium-16 Duplicates
       template(v-slot:body)
         p.notification.text-grey.text-regular-14(v-if="showNoResult('duplicate')") No result
-        related-documents(v-if="duplicatedDocumentList && duplicatedDocumentList.length" :documentList="duplicatedDocumentList" :credentials="credentials" :type="'duplicate'" :sdkAudit="kmAudit")
+        related-documents(v-if="topSubjects && topSubjects.duplicate.length" :type="'duplicate'")
         loader.loader-block(v-if="loadingStates.duplicate" color="white" )
     Collapse.collapse(:defaultOpen="collapseMenu.missingSubjects" @toggle="toggleCollapseMenu('missingSubjects')")
       template(v-slot:title)
@@ -90,8 +90,7 @@ const loadingStates = ref({
 const anomalyStore = useAnomalyStore();
 
 const {
-  conflictInformationList,
-  duplicatedInformationList,
+  topSubjects,
   documentsToManageList,
   missingSubjects
 } = storeToRefs(anomalyStore);
@@ -100,21 +99,13 @@ function showNoResult(type: string) {
   if (loadingStates.value.documentsToManage == false && loadingStates.value.conflict == false && loadingStates.value.duplicate == false && loadingStates.value.missingSubjects == false) {
     return (
         (type == 'documentsToManage' && documentsToManageList.value.length == 0 && collapseMenu.value.documentsToManage == true) ||
-        (type == 'conflict' && conflictInformationList.value.length == 0 && collapseMenu.value.conflict == true) ||
-        (type == 'duplicate' && duplicatedInformationList.value.length == 0 && collapseMenu.value.duplicate == true) ||
+        (type == 'conflict' && topSubjects.value.conflict.length == 0 && collapseMenu.value.conflict == true) ||
+        (type == 'duplicate' && topSubjects.value.duplicated.length == 0 && collapseMenu.value.duplicate == true) ||
         (type == 'missingSubjects' && missingSubjects.value.length == 0 && collapseMenu.value.missingSubjects == true)
     );
   }
   return false;
 }
-
-const conflictDocumentList: ComputedRef<Anomaly[]> = computed(() => {
-  return collapseMenu.value.conflict == true ? conflictInformationList.value : [];
-});
-
-const duplicatedDocumentList: ComputedRef<Anomaly[]> = computed(() => {
-  return collapseMenu.value.duplicate == true ? duplicatedInformationList.value : [];
-});
 
 function toggleCollapseMenu(type: string) {
   collapseMenu.value[type as keyof CollapseMenu] = !collapseMenu.value[type as keyof CollapseMenu];
@@ -138,7 +129,7 @@ watch(
     async (newVal, oldVal) => {
       loadingStates.value.conflict = true;
       if (newVal == true && oldVal == false) {
-        await anomalyStore.getConflictInformation();
+        await anomalyStore.countInformationBySubject("conflict")
       } else {
         anomalyStore.resetConflict();
       }
@@ -151,7 +142,7 @@ watch(
     async (newVal, oldVal) => {
       loadingStates.value.duplicate = true;
       if (newVal == true && oldVal == false) {
-        await anomalyStore.getDuplicatedInformation();
+        await anomalyStore.countInformationBySubject("duplicate")
       } else {
         anomalyStore.resetDuplicated();
       }
@@ -180,10 +171,6 @@ onMounted(async () => {
   const host = import.meta.env.VITE_HOST_URL;
   await anomalyStore.init(organizationId, instanceId, apiKey, host);
   loadingStates.value.documentsToManage = false;
-  // await anomalyStore.getDocumentsToManageList();
-  // await anomalyStore.getConflictInformation();
-  // await anomalyStore.getDuplicatedInformation();
-  // await anomalyStore.getMissingSubjectList();
 });
 </script>
 

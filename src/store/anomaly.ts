@@ -48,7 +48,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
     const duplicatedInformationWithSearch: Ref<Anomaly[]> = ref([]);
     const documentsToManageList: Ref<DocToMange[]> = ref([]);
     const missingSubjects: Ref<any[]> = ref([]);
-    const topSubjects: Ref<any[]> = ref([]);
+    const topSubjects: Ref<{conflict: any[], duplicated: any[]}> = ref({conflict: [], duplicated: []});
     const instaceId: Ref<string> = ref('');
 
     const managedIds = ref<ManagedIdsStorage>(
@@ -123,36 +123,25 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         missingSubjects.value = [];
     }
 
-    async function getConflictInformation(query: string = '') {
+    async function getConflictInformation(limit: number = 20, offset: number = 0, query: string = '') {
         if (!sdk) {
             return;
         }
         if (query != '') {
             conflictInformationWithSearch.value = [];
         }
-
-        let offset: number = 0;
-        const limit: number = 20;
-        while (true) {
-            let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query);
-            if (result) {
-                for (let index = 0; index < result.length; index++) {
-                    let document = result[index];
-                    if (document && document.docsRef && document.docsRef.length) {
-                        query == '' ? conflictInformationList.value.push(document) : conflictInformationWithSearch.value.push(document);
-                    }
+        let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query);
+        if (result) {
+            for (let index = 0; index < result.length; index++) {
+                let document = result[index];
+                if (document && document.docsRef && document.docsRef.length) {
+                    query == '' ? conflictInformationList.value.push(document) : conflictInformationWithSearch.value.push(document);
                 }
-                offset = offset + limit;
-                if (result.length < limit) {
-                    break;
-                }
-            } else {
-                break;
             }
-        }
+        } 
     }
 
-    async function getDuplicatedInformation(query: string = '') {
+    async function getDuplicatedInformation(  limit: number = 20, offset: number = 0, query: string = '') {
         if (!sdk) {
             return;
         }
@@ -161,25 +150,15 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             duplicatedInformationWithSearch.value = [];
         }
 
-        let offset: number = 0;
-        const limit: number = 20;
-        while (true) {
-            let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query);
-            if (result) {
-                for (let index = 0; index < result.length; index++) {
-                    let document = result[index];
-                    if (document && document.docsRef && document.docsRef.length) {
-                        query == '' ? duplicatedInformationList.value.push(document) : duplicatedInformationWithSearch.value.push(document);
-                    }
+        let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query);
+        if (result) {
+            for (let index = 0; index < result.length; index++) {
+                let document = result[index];
+                if (document && document.docsRef && document.docsRef.length) {
+                    query == '' ? duplicatedInformationList.value.push(document) : duplicatedInformationWithSearch.value.push(document);
                 }
-                offset = offset + limit;
-                if (result.length < limit) {
-                    break;
-                }
-            } else {
-                break;
             }
-        }
+        } 
     }
 
     async function getDocumentsToManageList() {
@@ -299,9 +278,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             return [];
         }
         if (type == "conflict") {
-            topSubjects.value = await sdk.value.auditInstance().countConflictInformationBySubject();
+            topSubjects.value.conflict = await sdk.value.auditInstance().countConflictInformationBySubject();
         } else {
-            topSubjects.value = await sdk.value.auditInstance().countDuplicatedInformationBySubject();
+            topSubjects.value.duplicated = await sdk.value.auditInstance().countDuplicatedInformationBySubject();
         }
 
     }

@@ -18,13 +18,14 @@
                 template(#body)
                     .document-type
                         p.text-white.text-medium-14(v-for="type in otherTypes" @click="selectedType = type") {{ type }}
-        document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
+        .document-list(@scroll="loadMore")
+            document-card.document-card(v-if="documentsToShow.length > 0" v-for="(element, index) in documentsToShow" :document="element" :key="element.subject + '_' + index" :type="props.type")
     .grouped(v-if="menu == 'grouped'")
         anomalie-grouped-by-doc(:type="props.type")
 </template>
 
 <script setup lang="ts">
-import { computed, type ComputedRef, ref, type Ref, watch } from 'vue';
+import { computed, type ComputedRef, onMounted, ref, type Ref, watch } from 'vue';
 import DropdownSelect from './DropdownSelect.vue';
 import DocumentCard from './DocumentCard.vue';
 import AnomalieOverview from './AnomalieOverview.vue';
@@ -55,6 +56,9 @@ const menu: Ref<string> = ref('overview');
 
 const subjectToSearch: Ref<string> = ref('');
 const searchApplied: Ref<boolean> = ref(false);
+const offsetAnomaly: Ref<number> = ref(0);
+const offsetAnomalySearch: Ref<number> = ref(0);
+const limitPerPage: number = 20;
 
 const otherTypes: ComputedRef<string[]> = computed(() => {
     return typeList.value.filter((t: string) => t != selectedType.value);
@@ -66,8 +70,8 @@ const documentsToShow = computed(() => {
                 ? [...conflictInformationWithSearch.value]
                 : [...conflictInformationList.value]
             : searchApplied.value
-                ? [...duplicatedInformationWithSearch.value]
-                : [...duplicatedInformationList.value];
+            ? [...duplicatedInformationWithSearch.value]
+            : [...duplicatedInformationList.value];
 
     if (selectedType.value === 'All') {
         return documents;
@@ -78,11 +82,30 @@ const documentsToShow = computed(() => {
 
 function searchAnomalies() {
     if (subjectToSearch.value.trim() !== '') {
-        searchApplied.value = true;  
+        searchApplied.value = true;
+        offsetAnomalySearch.value = 0;
         if (props.type == 'conflict') {
-            anomalyStore.getConflictInformation(subjectToSearch.value);
+            anomalyStore.getConflictInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
         } else {
-            anomalyStore.getDuplicatedInformation(subjectToSearch.value);
+            anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
+        }
+    }
+}
+
+function loadMore() {
+    if (subjectToSearch.value.trim() !== '') {
+        offsetAnomalySearch.value += 10;
+        if (props.type == 'conflict') {
+            anomalyStore.getConflictInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
+        } else {
+            anomalyStore.getDuplicatedInformation(limitPerPage, offsetAnomalySearch.value, subjectToSearch.value);
+        }
+    } else {
+        offsetAnomaly.value += 10;
+        if (props.type == 'conflict') {
+            anomalyStore.getConflictInformation(offsetAnomaly.value, offsetAnomaly.value);
+        } else {
+            anomalyStore.getDuplicatedInformation(offsetAnomaly.value, offsetAnomaly.value);
         }
     }
 }
@@ -91,7 +114,7 @@ watch(
     () => subjectToSearch.value,
     (newVal, oldVal) => {
         if (newVal == '') {
-            searchApplied.value = false;  
+            searchApplied.value = false;
             if (props.type == 'conflict') {
                 anomalyStore.resetConflictSearch();
             } else {
@@ -100,6 +123,14 @@ watch(
         }
     }
 );
+
+onMounted(() => {
+    if (props.type == 'conflict') {
+        anomalyStore.getConflictInformation();
+    } else {
+        anomalyStore.getDuplicatedInformation();
+    }
+});
 </script>
 
 <style scoped lang="scss">

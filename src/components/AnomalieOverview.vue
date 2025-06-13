@@ -10,7 +10,7 @@
           th
             p.text-medium-14.text-grey Occurrences
       tbody
-        tr(v-for="(subject, index) in topSubjects" :key="subject.subject")
+        tr(v-for="(subject, index) in topSubjects[props.type]" :key="subject.subject")
           td
             p.text-white.text-regular-14 {{ index + 1 }}
           td
@@ -66,7 +66,6 @@ function closeModal() {
   showModal.value = false;
 }
 
-anomalyStore.countInformationBySubject(props.type)
 
 </script>
 
