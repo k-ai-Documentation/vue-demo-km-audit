@@ -136,7 +136,7 @@ onMounted(() => {
 <style scoped lang="scss">
 
 .file-container {
-  height: 400px;
+  max-height: 400px;
   overflow-y: scroll;
 }
 
