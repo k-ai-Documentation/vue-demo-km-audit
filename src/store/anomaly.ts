@@ -324,7 +324,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 }
             }
 
-            if (loadingDuplicateDocumentPairs.value && type == "duplicate") {
+            if (loadingDuplicateDocumentPairs.value && type == "duplicated") {
                 loadingDuplicateDocumentPairs.value = false
                 result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset, documentName)
                 result.forEach((docPair: any) => {
