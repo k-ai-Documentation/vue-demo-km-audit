@@ -298,10 +298,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             }
             let result = []
             if (offset == 0) {
-                conflictDocIdsList.value = []
-                duplicatedDocIdsList.value = []
-                loadingConflictDocumentPairs.value = true
-                loadingDuplicateDocumentPairs.value = true
+                if (type == "conflict") {
+                    conflictDocIdsList.value = []
+                    loadingConflictDocumentPairs.value = true
+                } else {
+                    duplicatedDocIdsList.value = []
+                    loadingDuplicateDocumentPairs.value = true
+                }
             }
 
             if (loadingConflictDocumentPairs.value && type == "conflict") {
