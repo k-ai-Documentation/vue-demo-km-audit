@@ -108,7 +108,6 @@ class IndexedDBManager {
             if (this.currentDB === false) {
                 return reject(false);
             }
-            console.log("updated")
             this.addStack(this._updateData, {store, datas}, resolve, reject);
         });
     }
