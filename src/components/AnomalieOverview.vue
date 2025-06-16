@@ -14,24 +14,23 @@
           td
             p.text-white.text-regular-14 {{ index + 1 }}
           td
-            p.text-white.text-regular-14.subject( @click="showModal = true; getfilteredAnomalies(subject.subject)") {{ subject.subject }}
+            p.text-white.text-regular-14.subject( @click="showModal = true; loadAnomaliesBySubject(subject.subject)") {{ subject.subject }}
           td
             p.text-white.text-regular-14 {{ subject.count }}
 
     .modal-container(v-if="showModal")
       .modal-bg(@click="closeModal()")
-      ModalTemplate.modal(@closeModal="closeModal()")
+      ModalTemplate.modal(@closeModal="closeModal()" @scroll="loadMore")
         template(#header)
           p.text-white.text-bold-16 {{type.charAt(0).toUpperCase() + type.slice(1)}} documents
         template(#body)
-          .docs(v-if="filterdAnomalies && filterdAnomalies.length > 0")
-            document-card.document-card(v-for="document of filteredAnomalies" :document="document" :key="document.id" :type="props.type")
+            document-card.document-card(v-for="document of anomaliesBySubject" :document="document" :key="document.id" :type="props.type")
 
 
 </template>
 
 <script setup lang="ts">
-import {type Ref, ref} from 'vue';
+import {computed, type Ref, ref} from 'vue';
 import ModalTemplate from './ModalTemplate.vue';
 import DocumentCard from './DocumentCard.vue';
 
@@ -39,7 +38,7 @@ import {useAnomalyStore} from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 
 const anomalyStore = useAnomalyStore();
-const {topSubjects} = storeToRefs(anomalyStore);
+const {topSubjects, anomaliesBySubject} = storeToRefs(anomalyStore);
 
 interface Document {
   docsRef: any[];
@@ -55,12 +54,20 @@ const props = defineProps<{
 }>();
 
 const showModal = ref(false);
-const filteredAnomalies = ref<Document[]>([]);
+const selectedSubject = ref("");
+let offset = ref(0);
 const anomalies: Ref<any[]> = ref([])
 
-const getfilteredAnomalies = (subject: string) => {
-  filteredAnomalies.value = anomalies.value.filter((doc: any) => doc.subject === subject);
-};
+function loadAnomaliesBySubject(subject: string) {
+  selectedSubject.value = subject
+  offset.value = 0
+  anomalyStore.getAnomaliesBySubject(props.type, subject, 10, offset.value)
+}
+
+function loadMore() {
+  offset.value += 5
+  anomalyStore.getAnomaliesBySubject(props.type, selectedSubject.value, 10, offset.value)
+}
 
 function closeModal() {
   showModal.value = false;

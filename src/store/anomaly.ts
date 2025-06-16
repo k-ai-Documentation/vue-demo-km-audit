@@ -44,9 +44,12 @@ interface ManagedIdsStorage {
 
 export const useAnomalyStore = defineStore('anomalyStore', () => {
         const conflictInformationList: Ref<Anomaly[]> = ref([]);
+        const duplicatedInformationList: Ref<Anomaly[]> = ref([]);
+        const anomaliesBySubject: Ref<Anomaly[]> = ref([]);
+        const anomaliesBySubjectLoaded: Ref<boolean> = ref(false);
+
         const conflictDocIdsList: Ref<any[]> = ref([]);
         const duplicatedDocIdsList: Ref<any[]> = ref([]);
-        const duplicatedInformationList: Ref<Anomaly[]> = ref([]);
         const documentsToManageList: Ref<DocToMange[]> = ref([]);
         const missingSubjects: Ref<any[]> = ref([]);
         const loadingConflictDocumentPairs: Ref<boolean> = ref(true);
@@ -248,6 +251,40 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             });
         }
 
+        async function getAnomaliesBySubject(type: string, subject: string, limit: number = 10, offset: number = 0) {
+            if (!sdk) {
+                return;
+            }
+
+            let result = []
+
+            if (offset == 0) {
+                anomaliesBySubjectLoaded.value = true
+                anomaliesBySubject.value = []
+            }
+
+            if (anomaliesBySubjectLoaded.value) {
+                anomaliesBySubjectLoaded.value = false
+
+                if (type == "conflict") {
+                    result = await sdk.value.auditInstance().getConflictInformationBySubject(subject, limit, offset);
+                } else {
+                    result = await sdk.value.auditInstance().getDuplicateInformationBySubject(subject, limit, offset);
+                }
+
+                result.forEach((el: any) => {
+                    anomaliesBySubject.value.push(el)
+                })
+
+                if (result.length < limit) {
+                    anomaliesBySubjectLoaded.value = false
+                } else {
+                    anomaliesBySubjectLoaded.value = true
+                }
+            }
+
+        }
+
         async function getDocument(fileId: string) {
             if (!sdk) {
                 return false;
@@ -322,9 +359,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                     }
                 });
 
-                if (result.length < limit) {
-                    loadingConflictDocumentPairs.value = false
-                }
+                loadingConflictDocumentPairs.value = result.length >= limit;
             }
 
             if (loadingDuplicateDocumentPairs.value && type == "duplicated") {
@@ -342,9 +377,8 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                     }
                 });
 
-                if (result.length < limit) {
-                    loadingDuplicateDocumentPairs.value = false
-                }
+                loadingDuplicateDocumentPairs.value = result.length >= limit;
+
             }
         }
 
@@ -373,6 +407,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             topSubjects,
             conflictDocIdsList,
             duplicatedDocIdsList,
+            anomaliesBySubject,
             init,
             resetConflict,
             resetDuplicated,
@@ -388,7 +423,8 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             getDocument,
             countInformationBySubject,
             getAnomaliesDocumentPair,
-            getAnomaliesByDocumentIds
+            getAnomaliesByDocumentIds,
+            getAnomaliesBySubject
         };
     })
 ;

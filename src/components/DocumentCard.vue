@@ -16,7 +16,7 @@
       p.text-bold-14.text-white.name(@click="goTo(element)") DOC {{index+1}}: {{element.name}}
       p.text-regular-14.text-white.detail {{element.information_involved}}
     .explanation(v-if="file.explanation")
-      p.text-white.text-bold-14 Explanation: 
+      p.text-white.text-bold-14 Explanation:
       p.text-white.text-regular-14 {{file.explanation}}
     .open-all
       .action(@click="downloadAll()")
@@ -61,25 +61,12 @@ const availableStateList = computed(() => {
 });
 
 async function fetchMergeInformation() {
-    const docsRef = file.docsRef;
     const documents = file.documents;
     let toReturn: any = [];
-    if (docsRef && documents) {
-        docsRef.forEach((docRef: any) => {
-            documents.forEach((doc: any) => {
-                if (docRef.id == doc.docId) {
-                    let matchedResult = {
-                        ...docRef,
-                        information_involved: doc.information_involved,
-                    };
-                    toReturn.push(matchedResult);
-                }
-            });
-        });
-    } else if (documents && !docsRef) {
+    if (documents) {
         const coreInstance = sdk.value.core();
         for (const doc of documents) {
-            const docInfo = await coreInstance.getDocSignature(doc.docId);
+            const docInfo = await coreInstance.getDocumentById(doc.docId);
             let matchedResult = {
                 name: docInfo.name,
                 url: docInfo.url,
