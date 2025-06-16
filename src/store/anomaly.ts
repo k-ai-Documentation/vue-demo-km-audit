@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia';
 import {ref, type Ref} from 'vue';
 import {KaiStudio} from 'sdk-js';
-import indexedDBManager from "@/lib/IndexedDBManager";
+import indexedDBManager from "./../lib/IndexedDBManager";
 
 interface Credentail {
     organizationId: string | undefined;
