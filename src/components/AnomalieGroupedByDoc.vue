@@ -24,8 +24,8 @@ const {
 
 const filterByDocument: Ref<string> = ref('');
 const showSearchList: Ref<boolean> = ref(false);
-const limit = 10
-let offset = 0
+const limit: Ref<number> = ref(10);
+let offset: Ref<number> = ref(0);
 
 const props = defineProps<{
   type: string;
@@ -42,14 +42,14 @@ function loadMore(e: any) {
   const el = e.target
   const isBottom = (el.scrollTop + el.clientHeight + 200 >= el.scrollHeight)
   if (isBottom) {
-    offset += limit
-    anomalyStore.getAnomaliesDocumentPair(props.type, limit, offset, filterByDocument.value)
+    offset.value = offset.value + limit.value
+    anomalyStore.getAnomaliesDocumentPair(props.type, limit.value, offset.value, filterByDocument.value)
   }
 }
 
 function searchByTitle() {
-  offset = 0
-  anomalyStore.getAnomaliesDocumentPair(props.type, limit, offset, filterByDocument.value)
+  offset.value = 0
+  anomalyStore.getAnomaliesDocumentPair(props.type, limit.value, offset.value, filterByDocument.value)
 }
 
 onMounted(() => {
