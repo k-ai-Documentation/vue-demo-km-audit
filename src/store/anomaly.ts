@@ -330,7 +330,10 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                     }
                 });
             }
-            loadingDocumentPairs.value = true
+
+            if(result.length < limit) {
+                loadingDocumentPairs.value = false
+            }
         }
     }
 
