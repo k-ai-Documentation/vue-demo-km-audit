@@ -42,7 +42,7 @@ import DocumentCard from "./DocumentCard.vue"
 
 import {useAnomalyStore} from './../store/anomaly';
 import {storeToRefs} from 'pinia';
-import DocumentRow from "@/components/DocumentRow.vue";
+import DocumentRow from "./../components/DocumentRow.vue";
 
 const anomalyStore = useAnomalyStore();
 

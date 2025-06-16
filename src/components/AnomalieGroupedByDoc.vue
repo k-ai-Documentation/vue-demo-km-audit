@@ -14,7 +14,7 @@
 import {onMounted, ref, type Ref} from 'vue';
 import {useAnomalyStore} from './../store/anomaly';
 import {storeToRefs} from 'pinia';
-import DocAnomalies from "@/components/DocAnomalies.vue";
+import DocAnomalies from "./../components/DocAnomalies.vue";
 
 const anomalyStore = useAnomalyStore();
 const {
