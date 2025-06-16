@@ -306,17 +306,29 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (type == "conflict") {
                 result = await sdk.value.auditInstance().getConflictInformationDocumentPair(limit, offset, documentName)
                 result.forEach((docPair: any) => {
-                    if (conflictDocIdsList.value.indexOf(docPair) == -1) {
-                        conflictDocIdsList.value.push(docPair)
+                    const sortedDocPair = [...docPair].sort();
+                    const exists = conflictDocIdsList.value.some((existingPair: any) => {
+                        const sortedExisting = [...existingPair].sort();
+                        return JSON.stringify(sortedExisting) === JSON.stringify(sortedDocPair);
+                    });
+
+                    if (!exists) {
+                        conflictDocIdsList.value.push(docPair);
                     }
-                })
+                });
             } else {
                 result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset, documentName)
                 result.forEach((docPair: any) => {
-                    if (duplicatedDocIdsList.value.indexOf(docPair) == -1) {
-                        duplicatedDocIdsList.value.push(docPair)
+                    const sortedDocPair = [...docPair].sort();
+                    const exists = duplicatedDocIdsList.value.some((existingPair: any) => {
+                        const sortedExisting = [...existingPair].sort();
+                        return JSON.stringify(sortedExisting) === JSON.stringify(sortedDocPair);
+                    });
+
+                    if (!exists) {
+                        duplicatedDocIdsList.value.push(docPair);
                     }
-                })
+                });
             }
             loadingDocumentPairs.value = true
         }
