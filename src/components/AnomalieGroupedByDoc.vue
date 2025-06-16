@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, type Ref} from 'vue';
+import {computed, onMounted, ref, type Ref} from 'vue';
 import {useAnomalyStore} from './../store/anomaly';
 import {storeToRefs} from 'pinia';
 import DocAnomalies from "./../components/DocAnomalies.vue";
@@ -36,7 +36,9 @@ function selectDocument(document: string) {
   showSearchList.value = false;
 }
 
-const anomaliesIdPairs = props.type == 'conflict' ? conflictDocIdsList.value : duplicatedDocIdsList.value;
+const anomaliesIdPairs = computed(() => {
+  return (props.type == 'conflict') ? conflictDocIdsList.value : duplicatedDocIdsList.value;
+});
 
 function loadMore(e: any) {
   const el = e.target
@@ -60,7 +62,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .doc-anomalies-container {
-  height: 600px;
+  max-height: 600px;
   overflow-y: scroll;
 }
 </style>
