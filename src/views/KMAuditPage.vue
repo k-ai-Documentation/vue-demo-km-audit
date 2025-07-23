@@ -99,8 +99,8 @@ function showNoResult(type: string) {
   if (loadingStates.value.documentsToManage == false && loadingStates.value.conflict == false && loadingStates.value.duplicate == false && loadingStates.value.missingSubjects == false) {
     return (
         (type == 'documentsToManage' && documentsToManageList.value.length == 0 && collapseMenu.value.documentsToManage == true) ||
-        (type == 'conflict' && topSubjects.value.conflict.length == 0 && collapseMenu.value.conflict == true) ||
-        (type == 'duplicate' && topSubjects.value.duplicated.length == 0 && collapseMenu.value.duplicate == true) ||
+        (type == 'conflict' && Object.keys(topSubjects.value.conflict).length == 0 && collapseMenu.value.conflict == true) ||
+        (type == 'duplicate' && Object.keys(topSubjects.value.duplicated).length == 0 && collapseMenu.value.duplicate == true) ||
         (type == 'missingSubjects' && missingSubjects.value.length == 0 && collapseMenu.value.missingSubjects == true)
     );
   }
@@ -165,11 +165,10 @@ watch(
 
 onMounted(async () => {
   loadingStates.value.documentsToManage = true;
-  const organizationId = import.meta.env.VITE_APP_ORGANIZATION_ID ?? credentials.organizationId ?? '';
   const instanceId = import.meta.env.VITE_APP_INSTANCE_ID ?? credentials.instanceId ?? '';
   const apiKey = import.meta.env.VITE_APP_API_KEY ?? credentials.apiKey ?? '';
   const host = import.meta.env.VITE_HOST_URL;
-  await anomalyStore.init(organizationId, instanceId, apiKey, host);
+  await anomalyStore.init(instanceId, apiKey, host);
   loadingStates.value.documentsToManage = false;
 });
 </script>

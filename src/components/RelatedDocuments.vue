@@ -83,7 +83,6 @@ function loadAnomaly() {
 function loadAnomalyByState(type: string)  {
   if (type != selectedType.value) {
     selectedType.value = type
-    console.log(type)
     offsetAnomaly.value = 0
     loadAnomaly()
   }

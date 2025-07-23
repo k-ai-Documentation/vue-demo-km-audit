@@ -64,9 +64,9 @@ async function fetchMergeInformation() {
     const documents = file.documents;
     let toReturn: any = [];
     if (documents) {
-        const coreInstance = sdk.value.core();
+        const documentInstance = sdk.value.document();
         for (const doc of documents) {
-            const docInfo = await coreInstance.getDocumentById(doc.docId);
+            const docInfo = await documentInstance.getDocumentDetail(doc.doc_id);
             let matchedResult = {
                 name: docInfo.name,
                 url: docInfo.url,
@@ -83,7 +83,7 @@ function setStatus(state: string) {
         case 'conflict':
             anomalyStore.setConflictState(file.id, state.toLowerCase());
             break;
-        case 'duplicate':
+        case 'duplicated':
             anomalyStore.setDuplicateState(file.id, state.toLowerCase());
             break;
     }

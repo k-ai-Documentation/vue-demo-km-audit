@@ -4,7 +4,6 @@ import {KaiStudio} from 'sdk-js';
 import indexedDBManager from "./../lib/IndexedDBManager";
 
 interface Credentail {
-    organizationId: string | undefined;
     instanceId: string | undefined;
     apiKey: string | undefined;
     host: string | undefined;
@@ -65,7 +64,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
         );
 
         const credential: Ref<Credentail> = ref({
-            organizationId: undefined,
             instanceId: undefined,
             apiKey: undefined,
             host: undefined,
@@ -73,10 +71,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
         let sdk: any = ref(null);
 
-        async function init(organizationId?: string, instanceId?: string, apiKey?: string, host?: string) {
-            if (organizationId && instanceId && apiKey) {
+        async function init(instanceId?: string, apiKey?: string, host?: string) {
+            if (instanceId && apiKey) {
                 sdk.value = new KaiStudio({
-                    organizationId: organizationId,
                     instanceId: instanceId,
                     apiKey: apiKey,
                 });
@@ -90,7 +87,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             }
 
             credential.value = {
-                organizationId: organizationId,
                 instanceId: instanceId,
                 apiKey: apiKey,
                 host: host,
@@ -128,11 +124,11 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 conflictInformationList.value = []
             }
 
-            let result = await sdk.value.auditInstance().getConflictInformation(limit, offset, query, state);
+            let result = await sdk.value.auditInstance().listConflicts(limit, offset, "", query, state);
             if (result) {
                 for (let index = 0; index < result.length; index++) {
                     let document = result[index];
-                    if (document && document.docsRef && document.docsRef.length) {
+                    if (document && document.documents && document.documents.length) {
                         conflictInformationList.value.push(document)
                     }
                 }
@@ -147,12 +143,11 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (offset == 0) {
                 duplicatedInformationList.value = []
             }
-
-            let result = await sdk.value.auditInstance().getDuplicatedInformation(limit, offset, query, state);
+            let result = await sdk.value.auditInstance().listDuplicates(limit, offset, query, "", state );
             if (result) {
                 for (let index = 0; index < result.length; index++) {
                     let document = result[index];
-                    if (document && document.docsRef && document.docsRef.length) {
+                    if (document && document.documents && document.documents.length) {
                         duplicatedInformationList.value.push(document)
                     }
                 }
@@ -165,7 +160,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             }
 
             documentsToManageList.value = []
-            const docList = await sdk.value.auditInstance().getDocumentIdsToManageList()
+            const docList = await sdk.value.auditInstance().countAnomaliesPerDocument()
             const docs: any[] = []
             if (docList) {
                 const docIds: any[] = Object.keys(docList);
@@ -188,7 +183,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             let offset: number = 0;
             const limit: number = 20;
             while (true) {
-                let result = await sdk.value.auditInstance().getMissingSubjectList(limit, offset);
+                let result = await sdk.value.auditInstance().listMissingInformation(limit, offset);
                 if (result) {
                     for (let index = 0; index < result.length; index++) {
                         let subject = result[index];
@@ -242,7 +237,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (!sdk) {
                 return;
             }
-            await sdk.value.auditInstance().conflictInformationSetState(conflictId, state);
+            await sdk.value.auditInstance().updateConflictState(conflictId, state);
             conflictInformationList.value.forEach((item) => {
                 if (item.id == conflictId) {
                     item.state = state.toUpperCase();
@@ -267,9 +262,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 anomaliesBySubjectLoaded.value = false
 
                 if (type == "conflict") {
-                    result = await sdk.value.auditInstance().getConflictInformationBySubject(subject, limit, offset);
+                    result = await sdk.value.auditInstance().getConflictsBySubject(subject, offset, limit);
                 } else {
-                    result = await sdk.value.auditInstance().getDuplicateInformationBySubject(subject, limit, offset);
+                    result = await sdk.value.auditInstance().getDuplicatesBySubject(subject, offset, limit);
                 }
 
                 result.forEach((el: any) => {
@@ -293,7 +288,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (fileId && files[fileId]) {
                 return files[fileId]
             } else {
-                const file = await sdk.value.core().getDocumentById(fileId)
+                const file = await sdk.value.document().getDocumentDetail(fileId)
                 indexedDBManager.updateData('files', [
                     {
                         ...file,
@@ -308,7 +303,8 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (!sdk) {
                 return;
             }
-            await sdk.value.auditInstance().duplicatedInformationSetState(duplicateId, state);
+            console.log('vouvou')
+            await sdk.value.auditInstance().updateDuplicateState(duplicateId, state);
             duplicatedInformationList.value.forEach((item) => {
                 if (item.id == duplicateId) {
                     item.state = state.toUpperCase();
@@ -322,9 +318,17 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 return [];
             }
             if (type == "conflict") {
-                topSubjects.value.conflict = await sdk.value.auditInstance().countConflictInformationBySubject();
+                const conflictData = await sdk.value.auditInstance().countConflictsPerSubject();
+                topSubjects.value.conflict = Object.entries(conflictData).map(([subject, count]) => ({
+                    subject: subject,
+                    count: count
+                }));
             } else {
-                topSubjects.value.duplicated = await sdk.value.auditInstance().countDuplicatedInformationBySubject();
+                const duplicatedData = await sdk.value.auditInstance().countDuplicatesPerSubject();
+                topSubjects.value.duplicated = Object.entries(duplicatedData).map(([subject, count]) => ({
+                    subject: subject,
+                    count: count
+                }));
             }
 
         }
@@ -346,7 +350,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
             if (loadingConflictDocumentPairs.value && type == "conflict") {
                 loadingConflictDocumentPairs.value = false
-                result = await sdk.value.auditInstance().getConflictInformationDocumentPair(limit, offset, documentName)
+                result = await sdk.value.auditInstance().getConflictDocumentPairs(limit, offset, documentName)
                 result.forEach((docPair: any) => {
                     const sortedDocPair = [...docPair].sort();
                     const exists = conflictDocIdsList.value.some((existingPair: any) => {
@@ -364,7 +368,7 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
             if (loadingDuplicateDocumentPairs.value && type == "duplicated") {
                 loadingDuplicateDocumentPairs.value = false
-                result = await sdk.value.auditInstance().getDuplicateInformationDocumentPair(limit, offset, documentName)
+                result = await sdk.value.auditInstance().getDuplicateDocumentPairs(limit, offset, documentName)
                 result.forEach((docPair: any) => {
                     const sortedDocPair = [...docPair].sort();
                     const exists = duplicatedDocIdsList.value.some((existingPair: any) => {
@@ -389,9 +393,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             }
             let result = []
             if (type == "conflict") {
-                result = await sdk.value.auditInstance().getConflictInformationByDocuments(docIds)
+                result = await sdk.value.auditInstance().getConflictsByDocumentPair(docIds)
             } else {
-                result = await sdk.value.auditInstance().getDuplicateInformationByDocuments(docIds)
+                result = await sdk.value.auditInstance().getDuplicatesByDocumentPair(docIds)
             }
             return result
         }

@@ -15,7 +15,7 @@
     "pinia": "^2.3.1",
     "pug": "^3.0.2",
     "sass": "^1.75.0",
-    "sdk-js": "github:k-ai-Documentation/sdk-js#version2.0",
+    "sdk-js": "github:k-ai-Documentation/sdk-js#new-version",
     "vue": "^3.4.21",
     "vue-buffer": "^0.0.1",
     "vue-router": "^4.3.0"
