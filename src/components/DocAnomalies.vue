@@ -20,14 +20,14 @@
           tr(v-for="anomaly in anomalies" :key="anomaly.id")
             td.text-regular-14.text-white.subject {{anomaly.subject}}
             td.state
-              p.text-white.text-medium-14(v-if="anomaly.state == 'DISAPPEARED'") {{anomalieStateList[anomaly.id]}}
+              p.text-white.text-medium-14(v-if="anomaly.state == 'DISAPPEARED'") {{anomaly.state}}
               DropdownSelect(v-else)
                 template(#trigger)
                   .trigger
                     p.text-white.text-medium-14 {{anomaly.state}}
                 template(#body)
                   .select-box(v-for="state in getAvailableStateList(anomaly)" :key="state")
-                    p.text-white.text-medium-14( @click="setStatus(anomaly.id, state)"  v-if="state != anomalieStateList[anomaly.id]") {{state}}
+                    p.text-white.text-medium-14( @click="setStatus(anomaly.id, state)") {{state}}
             td.text-regular-14.text-white.info {{anomaly.documents[0].information_involved}}
             td.text-regular-14.text-white.info {{anomaly.documents[1].information_involved}}
             td.text-regular-14.text-white {{anomaly.explanation}}
@@ -99,7 +99,7 @@ function setStatus(anomalyId: string, state: string) {
     case 'conflict':
       anomalyStore.setConflictState(anomalyId, state.toLowerCase());
       break;
-    case 'duplicate':
+    case 'duplicated':
       anomalyStore.setDuplicateState(anomalyId, state.toLowerCase());
       break;
   }
@@ -115,13 +115,13 @@ async function downloadAllDocs() {
 }
 
 async function goTo(file: any) {
-  if (file.url.indexOf('/api/orchestrator/files/download') != -1) {
+  if (file.id.indexOf('ABS') != -1) {
     if (!sdk.value) {
       return;
     }
-    const result = await sdk.value.fileInstance().downloadFile(file.name);
+    const result = await sdk.value.document().downloadFile(file.id);
 
-    if (result && result.data) {
+    if (result) {
       const buffer = Buffer.from(result);
       const blob = new Blob([buffer]);
       const url = window.URL.createObjectURL(blob);

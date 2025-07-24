@@ -70,6 +70,7 @@ async function fetchMergeInformation() {
             let matchedResult = {
                 name: docInfo.name,
                 url: docInfo.url,
+                id: docInfo.id,
                 information_involved: doc.information_involved,
             };
             toReturn.push(matchedResult);
@@ -90,13 +91,12 @@ function setStatus(state: string) {
 }
 
 async function goTo(file: any) {
-    if (file.url.indexOf('/api/orchestrator/files/download') != -1) {
+    if (file.id.indexOf('ABS') != -1) {
         if (!sdk.value) {
             return;
         }
-        const result = await sdk.value.fileInstance().downloadFile(file.name);
-
-        if (result && result.data) {
+        const result = await sdk.value.document().downloadFile(file.id);
+        if (result) {
             const buffer = Buffer.from(result);
             const blob = new Blob([buffer]);
             const url = window.URL.createObjectURL(blob);

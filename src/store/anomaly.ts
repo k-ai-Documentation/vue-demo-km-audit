@@ -303,7 +303,6 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
             if (!sdk) {
                 return;
             }
-            console.log('vouvou')
             await sdk.value.auditInstance().updateDuplicateState(duplicateId, state);
             duplicatedInformationList.value.forEach((item) => {
                 if (item.id == duplicateId) {
