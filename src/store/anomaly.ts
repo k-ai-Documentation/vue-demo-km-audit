@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia';
 import {ref, type Ref} from 'vue';
-import {KaiStudio} from 'sdk-js';
+import {KaiStudioInstance} from 'sdk-js';
 import indexedDBManager from "./../lib/IndexedDBManager";
 
 interface Credentail {
@@ -73,13 +73,13 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
 
         async function init(instanceId?: string, apiKey?: string, host?: string) {
             if (instanceId && apiKey) {
-                sdk.value = new KaiStudio({
+                sdk.value = new KaiStudioInstance({
                     instanceId: instanceId,
                     apiKey: apiKey,
                 });
                 instaceId.value = instanceId;
             } else if (host) {
-                sdk.value = new KaiStudio({
+                sdk.value = new KaiStudioInstance({
                     host: host,
                     apiKey: apiKey,
                 });

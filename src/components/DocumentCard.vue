@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { computed, type ComputedRef, onMounted, ref, type Ref } from 'vue';
-import { KaiStudio } from 'sdk-js';
+import { KaiStudioInstance } from 'sdk-js';
 import Buffer from 'vue-buffer';
 import axios from 'axios';
 import DropdownSelect from './DropdownSelect.vue';
