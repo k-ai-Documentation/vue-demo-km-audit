@@ -3,7 +3,7 @@
     td.name-td(width=576)
       div.file-name-loader(v-if="!fileInfo")
         span
-      p.text-white.text-regular-14(@click="showFileAnomalies(file)" v-else ) {{ fileInfo.name }}
+      p.text-white.text-regular-14(@click="$emit('showFileAnomalies', file)" v-else ) {{ fileInfo.name }}
     td.conflict(width=300)
       p.text-white.text-regular-14 {{ file.count_conflicts }}
     td.duplicate(width=300)

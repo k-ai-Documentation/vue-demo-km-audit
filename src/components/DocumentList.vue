@@ -16,7 +16,7 @@
     .file-container(@scroll="loadMore")
       table.files
         tbody
-          document-row(v-for="(file, index) in documentsToManageList.slice(0, displayLength)" :file="file" :key="file.id")
+          document-row(v-for="(file, index) in documentsToManageList.slice(0, displayLength)" :file="file" :key="file.id" @showFileAnomalies="showFileAnomalies")
 
     .modal-container(v-if="showModal")
       .modal-bg(@click="closeModal()")
@@ -60,7 +60,7 @@ async function showFileAnomalies(file: any) {
   if (!sdk.value) {
     return
   }
-  anomalies.value = await sdk.value.auditInstance().getAnomaliesForDoc(file.id)
+  anomalies.value = await sdk.value.auditInstance().getAnomaliesForDocument(file.id)
   modalFileId.value = file.id
   showModal.value = true
 }
