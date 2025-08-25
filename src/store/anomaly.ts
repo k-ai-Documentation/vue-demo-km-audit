@@ -317,17 +317,9 @@ export const useAnomalyStore = defineStore('anomalyStore', () => {
                 return [];
             }
             if (type == "conflict") {
-                const conflictData = await sdk.value.auditInstance().countConflictsPerSubject();
-                topSubjects.value.conflict = Object.entries(conflictData).map(([subject, count]) => ({
-                    subject: subject,
-                    count: count
-                }));
+                topSubjects.value.conflict = await sdk.value.auditInstance().countConflictsPerSubject()
             } else {
-                const duplicatedData = await sdk.value.auditInstance().countDuplicatesPerSubject();
-                topSubjects.value.duplicated = Object.entries(duplicatedData).map(([subject, count]) => ({
-                    subject: subject,
-                    count: count
-                }));
+                topSubjects.value.duplicated = await sdk.value.auditInstance().countDuplicatesPerSubject()
             }
 
         }
